@@ -28,6 +28,8 @@ export function createDb(url: string, options: CreateDbOptions = {}) {
   const client = postgres({ contract, pg: pool });
   return {
     orm: client.orm,
+    /** Runs `fn` in a transaction: it commits when `fn` returns and rolls back if it throws. */
+    transaction: client.transaction.bind(client),
     /** True when the database answers a trivial query. */
     async ping(): Promise<boolean> {
       try {

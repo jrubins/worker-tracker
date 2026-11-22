@@ -1,7 +1,7 @@
 # Agent guide
 
 Instructions for AI coding agents (and humans) working in this repo. Follow the existing
-patterns: the example `items` feature shows every layer, so copy its shape for new features.
+patterns: the `workouts` feature shows every layer, so copy its shape for new features.
 The README explains the setup; this file is the working rules.
 
 ## Getting set up
@@ -32,7 +32,7 @@ A change is done when **`pnpm check` and `pnpm e2e` pass** and:
 ```sh
 pnpm check                                    # typecheck, lint, format, unit/API/story tests
 pnpm e2e                                      # end-to-end tests in a real browser
-pnpm e2e tests/items.spec.ts                  # one e2e file (run from apps/e2e)
+pnpm e2e tests/workouts.spec.ts               # one e2e file (run from apps/e2e)
 pnpm typecheck | pnpm lint | pnpm format | pnpm test
 pnpm --filter @app/api test                   # one package's tests
 pnpm --filter @app/db emit                    # after editing contract.prisma
@@ -108,7 +108,30 @@ Not enforced by tooling, so check yourself:
 - **MCP tools** mirror the REST API: same services, same shared schemas as `inputSchema`. A
   feature an AI assistant should use gets tools in `features/mcp/mcp.tools.ts` and tests in
   `apps/api/test/mcp.test.ts` (connect a real MCP client as a unique user).
-- Services return plain shared types (`Item`), converting dates with `toISOString()`.
+- Services return plain shared types (`Workout`, `Exercise`), converting timestamps with
+  `toISOString()` and decimals (stored as text by Prisma) with `Number()`.
+
+## Workout domain rules
+
+- **Units and effort:** weights are pounds (`weightLb`, null = bodyweight / no added load).
+  Effort is stored as RPE; inputs may give RIR instead (RPE = 10 − RIR), never both.
+- **Dates:** workouts have a calendar `date` (YYYY-MM-DD) in the user's time zone
+  (`APP_TIMEZONE`). Use `localDate`, `weekStart`, `addDays` from `apps/api/src/lib/training.ts`;
+  never derive dates from UTC timestamps. Weeks start Monday.
+- **Calculations** live in `lib/training.ts` and the stats service: estimated 1RM is Epley
+  (`estimateOneRepMax`); warm-up sets never count toward volume, records or estimates.
+- **Exercise names** go through `exercises.resolve()` / `lookup()` (normalization in
+  `lib/exercise-names.ts`), never raw string comparison. Names met while logging create
+  _unconfirmed_ exercises with suggestions; names in a saved routine are confirmed. Merging moves
+  sets and routine entries and turns the old name into an alias.
+- **Routines are versioned:** saving a changed plan adds an immutable `RoutineVersion` (with a
+  change note); identical plans add nothing. Workouts link the version they followed. One-day
+  tweaks are not versions.
+- **Ownership:** `Exercise`, `Routine`, `Workout` and `WorkoutSet` carry `userId`; routine
+  versions and their exercises are reached only through an owned routine.
+- **Claude is the main interface.** Every capability has an MCP tool with a description that
+  teaches the workflow (plan → log → review new names). Changing behaviour means updating the
+  tool descriptions and server instructions too.
 
 ## Adding a feature (end to end)
 
@@ -163,8 +186,9 @@ API tests share one database and **run in parallel, with no cleanup**. Every tes
 - act as its own user: `uniqueUserId()` and `bearer(userId)` from `test/helpers.ts`, so
   per-user data never collides
 - create the rows it needs, with unique values: `unique('label')` from `test/helpers.ts`
-- assert only on rows it created (`toContainEqual(item)`, `not.toContain(id)`), never on
-  whole lists, counts or empty tables
+- assert only on its own data. Because each test is a fresh user, exact assertions on that
+  user's lists, counts and summaries are safe; across users, only `toContainEqual` /
+  `not.toContain`
 - never update or delete rows it didn't create
 
 Queries whose order tests rely on need a deterministic tie-breaker (e.g. `createdAt`, then

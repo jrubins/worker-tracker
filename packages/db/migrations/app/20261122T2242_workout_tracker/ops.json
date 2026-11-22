@@ -1,0 +1,1181 @@
+[
+  {
+    "id": "dropTable.Item",
+    "label": "Drop table \"Item\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Item"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Item\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Item\""
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"Item\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop table \"Item\"",
+        "sql": "DROP TABLE \"public\".\"Item\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Item\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Item\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"Item\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "table.Exercise",
+    "label": "Create table \"Exercise\"",
+    "summary": "Creates table \"Exercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Exercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Exercise\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Exercise\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"Exercise\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Exercise\"",
+        "sql": "CREATE TABLE \"public\".\"Exercise\" (\n  \"aliases\" text[] NOT NULL,\n  \"confirmed\" bool DEFAULT true NOT NULL,\n  \"createdAt\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"equipment\" text,\n  \"id\" SERIAL NOT NULL,\n  \"name\" text NOT NULL,\n  \"nameKey\" text NOT NULL,\n  \"notes\" text,\n  \"updatedAt\" timestamptz(3) NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"Exercise_aliases_elem_not_null_3676266c\" CHECK (array_position(\"aliases\", NULL) IS NULL)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Exercise\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"Exercise\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"Exercise\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "table.Routine",
+    "label": "Create table \"Routine\"",
+    "summary": "Creates table \"Routine\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Routine"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Routine\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Routine\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"Routine\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Routine\"",
+        "sql": "CREATE TABLE \"public\".\"Routine\" (\n  \"archived\" bool DEFAULT false NOT NULL,\n  \"createdAt\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"name\" text NOT NULL,\n  \"nameKey\" text NOT NULL,\n  \"position\" int4 DEFAULT 0 NOT NULL,\n  \"updatedAt\" timestamptz(3) NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Routine\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"Routine\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"Routine\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "table.RoutineVersion",
+    "label": "Create table \"RoutineVersion\"",
+    "summary": "Creates table \"RoutineVersion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "RoutineVersion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"RoutineVersion\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"RoutineVersion\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"RoutineVersion\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"RoutineVersion\"",
+        "sql": "CREATE TABLE \"public\".\"RoutineVersion\" (\n  \"changeNote\" text,\n  \"createdAt\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"notes\" text,\n  \"routineId\" int4 NOT NULL,\n  \"version\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"RoutineVersion\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"RoutineVersion\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"RoutineVersion\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "table.RoutineVersionExercise",
+    "label": "Create table \"RoutineVersionExercise\"",
+    "summary": "Creates table \"RoutineVersionExercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "RoutineVersionExercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"RoutineVersionExercise\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"RoutineVersionExercise\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"RoutineVersionExercise\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"RoutineVersionExercise\"",
+        "sql": "CREATE TABLE \"public\".\"RoutineVersionExercise\" (\n  \"exerciseId\" int4 NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"notes\" text,\n  \"position\" int4 NOT NULL,\n  \"routineVersionId\" int4 NOT NULL,\n  \"targetReps\" text,\n  \"targetRpe\" numeric(3,1),\n  \"targetSets\" int4,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"RoutineVersionExercise\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"RoutineVersionExercise\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"RoutineVersionExercise\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "table.Workout",
+    "label": "Create table \"Workout\"",
+    "summary": "Creates table \"Workout\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Workout"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Workout\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Workout\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"Workout\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Workout\"",
+        "sql": "CREATE TABLE \"public\".\"Workout\" (\n  \"createdAt\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"date\" date NOT NULL,\n  \"durationMinutes\" int4,\n  \"id\" SERIAL NOT NULL,\n  \"notes\" text,\n  \"routineVersionId\" int4,\n  \"startedAt\" timestamptz(3),\n  \"updatedAt\" timestamptz(3) NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Workout\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"Workout\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"Workout\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "table.WorkoutSet",
+    "label": "Create table \"WorkoutSet\"",
+    "summary": "Creates table \"WorkoutSet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"WorkoutSet\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"WorkoutSet\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"WorkoutSet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"WorkoutSet\"",
+        "sql": "CREATE TABLE \"public\".\"WorkoutSet\" (\n  \"createdAt\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"exerciseId\" int4 NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"notes\" text,\n  \"position\" int4 NOT NULL,\n  \"reps\" int4 NOT NULL,\n  \"rpe\" numeric(3,1),\n  \"userId\" text NOT NULL,\n  \"warmup\" bool DEFAULT false NOT NULL,\n  \"weightLb\" numeric(6,2),\n  \"workoutId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"WorkoutSet\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"WorkoutSet\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"WorkoutSet\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "unique.Exercise.Exercise_userId_nameKey_key",
+    "label": "Add unique constraint on \"Exercise\" (userId, nameKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Exercise_userId_nameKey_key",
+        "table": "Exercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Exercise_userId_nameKey_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Exercise_userId_nameKey_key",
+          "public",
+          "\"public\".\"Exercise\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"Exercise_userId_nameKey_key\" on \"Exercise\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Exercise_userId_nameKey_key\"",
+        "sql": "ALTER TABLE \"public\".\"Exercise\" ADD CONSTRAINT \"Exercise_userId_nameKey_key\" UNIQUE (\"userId\", \"nameKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"Exercise_userId_nameKey_key\" exists on (userId, nameKey)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "Exercise_userId_nameKey_key",
+          "public",
+          "\"public\".\"Exercise\"",
+          "u",
+          "[\"userId\",\"nameKey\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.Routine.Routine_userId_nameKey_key",
+    "label": "Add unique constraint on \"Routine\" (userId, nameKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Routine_userId_nameKey_key",
+        "table": "Routine"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Routine_userId_nameKey_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Routine_userId_nameKey_key",
+          "public",
+          "\"public\".\"Routine\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"Routine_userId_nameKey_key\" on \"Routine\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Routine_userId_nameKey_key\"",
+        "sql": "ALTER TABLE \"public\".\"Routine\" ADD CONSTRAINT \"Routine_userId_nameKey_key\" UNIQUE (\"userId\", \"nameKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"Routine_userId_nameKey_key\" exists on (userId, nameKey)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "Routine_userId_nameKey_key",
+          "public",
+          "\"public\".\"Routine\"",
+          "u",
+          "[\"userId\",\"nameKey\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.RoutineVersion.RoutineVersion_routineId_version_key",
+    "label": "Add unique constraint on \"RoutineVersion\" (routineId, version)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "RoutineVersion_routineId_version_key",
+        "table": "RoutineVersion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"RoutineVersion_routineId_version_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "RoutineVersion_routineId_version_key",
+          "public",
+          "\"public\".\"RoutineVersion\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"RoutineVersion_routineId_version_key\" on \"RoutineVersion\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"RoutineVersion_routineId_version_key\"",
+        "sql": "ALTER TABLE \"public\".\"RoutineVersion\" ADD CONSTRAINT \"RoutineVersion_routineId_version_key\" UNIQUE (\"routineId\", \"version\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"RoutineVersion_routineId_version_key\" exists on (routineId, version)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "RoutineVersion_routineId_version_key",
+          "public",
+          "\"public\".\"RoutineVersion\"",
+          "u",
+          "[\"routineId\",\"version\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.RoutineVersion.RoutineVersion_routineId_idx_fa038a10",
+    "label": "Create index \"RoutineVersion_routineId_idx_fa038a10\" on \"RoutineVersion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "RoutineVersion_routineId_idx_fa038a10",
+        "table": "RoutineVersion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"RoutineVersion_routineId_idx_fa038a10\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"RoutineVersion_routineId_idx_fa038a10\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"RoutineVersion_routineId_idx_fa038a10\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"RoutineVersion_routineId_idx_fa038a10\"",
+        "sql": "CREATE INDEX \"RoutineVersion_routineId_idx_fa038a10\" ON \"public\".\"RoutineVersion\" (\"routineId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"RoutineVersion_routineId_idx_fa038a10\" exists on \"RoutineVersion\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"RoutineVersion_routineId_idx_fa038a10\"",
+          "i",
+          "I",
+          "\"public\".\"RoutineVersion\"",
+          "btree",
+          "[\"routineId\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.RoutineVersionExercise.RoutineVersionExercise_exerciseId_idx_3c45a784",
+    "label": "Create index \"RoutineVersionExercise_exerciseId_idx_3c45a784\" on \"RoutineVersionExercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "RoutineVersionExercise_exerciseId_idx_3c45a784",
+        "table": "RoutineVersionExercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"RoutineVersionExercise_exerciseId_idx_3c45a784\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"RoutineVersionExercise_exerciseId_idx_3c45a784\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"RoutineVersionExercise_exerciseId_idx_3c45a784\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"RoutineVersionExercise_exerciseId_idx_3c45a784\"",
+        "sql": "CREATE INDEX \"RoutineVersionExercise_exerciseId_idx_3c45a784\" ON \"public\".\"RoutineVersionExercise\" (\"exerciseId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"RoutineVersionExercise_exerciseId_idx_3c45a784\" exists on \"RoutineVersionExercise\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"RoutineVersionExercise_exerciseId_idx_3c45a784\"",
+          "i",
+          "I",
+          "\"public\".\"RoutineVersionExercise\"",
+          "btree",
+          "[\"exerciseId\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.RoutineVersionExercise.RoutineVersionExercise_routineVersionId_idx_02c20e94",
+    "label": "Create index \"RoutineVersionExercise_routineVersionId_idx_02c20e94\" on \"RoutineVersionExercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "RoutineVersionExercise_routineVersionId_idx_02c20e94",
+        "table": "RoutineVersionExercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"RoutineVersionExercise_routineVersionId_idx_02c20e94\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"RoutineVersionExercise_routineVersionId_idx_02c20e94\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"RoutineVersionExercise_routineVersionId_idx_02c20e94\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"RoutineVersionExercise_routineVersionId_idx_02c20e94\"",
+        "sql": "CREATE INDEX \"RoutineVersionExercise_routineVersionId_idx_02c20e94\" ON \"public\".\"RoutineVersionExercise\" (\"routineVersionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"RoutineVersionExercise_routineVersionId_idx_02c20e94\" exists on \"RoutineVersionExercise\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"RoutineVersionExercise_routineVersionId_idx_02c20e94\"",
+          "i",
+          "I",
+          "\"public\".\"RoutineVersionExercise\"",
+          "btree",
+          "[\"routineVersionId\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Workout.Workout_routineVersionId_idx_02c20e94",
+    "label": "Create index \"Workout_routineVersionId_idx_02c20e94\" on \"Workout\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Workout_routineVersionId_idx_02c20e94",
+        "table": "Workout"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Workout_routineVersionId_idx_02c20e94\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Workout_routineVersionId_idx_02c20e94\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"Workout_routineVersionId_idx_02c20e94\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Workout_routineVersionId_idx_02c20e94\"",
+        "sql": "CREATE INDEX \"Workout_routineVersionId_idx_02c20e94\" ON \"public\".\"Workout\" (\"routineVersionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Workout_routineVersionId_idx_02c20e94\" exists on \"Workout\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"Workout_routineVersionId_idx_02c20e94\"",
+          "i",
+          "I",
+          "\"public\".\"Workout\"",
+          "btree",
+          "[\"routineVersionId\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Workout.Workout_userId_date_idx_b0e9c250",
+    "label": "Create index \"Workout_userId_date_idx_b0e9c250\" on \"Workout\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Workout_userId_date_idx_b0e9c250",
+        "table": "Workout"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Workout_userId_date_idx_b0e9c250\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Workout_userId_date_idx_b0e9c250\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"Workout_userId_date_idx_b0e9c250\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Workout_userId_date_idx_b0e9c250\"",
+        "sql": "CREATE INDEX \"Workout_userId_date_idx_b0e9c250\" ON \"public\".\"Workout\" (\"userId\", \"date\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Workout_userId_date_idx_b0e9c250\" exists on \"Workout\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"Workout_userId_date_idx_b0e9c250\"",
+          "i",
+          "I",
+          "\"public\".\"Workout\"",
+          "btree",
+          "[\"userId\",\"date\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.WorkoutSet.WorkoutSet_exerciseId_idx_3c45a784",
+    "label": "Create index \"WorkoutSet_exerciseId_idx_3c45a784\" on \"WorkoutSet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "WorkoutSet_exerciseId_idx_3c45a784",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"WorkoutSet_exerciseId_idx_3c45a784\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"WorkoutSet_exerciseId_idx_3c45a784\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"WorkoutSet_exerciseId_idx_3c45a784\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"WorkoutSet_exerciseId_idx_3c45a784\"",
+        "sql": "CREATE INDEX \"WorkoutSet_exerciseId_idx_3c45a784\" ON \"public\".\"WorkoutSet\" (\"exerciseId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"WorkoutSet_exerciseId_idx_3c45a784\" exists on \"WorkoutSet\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"WorkoutSet_exerciseId_idx_3c45a784\"",
+          "i",
+          "I",
+          "\"public\".\"WorkoutSet\"",
+          "btree",
+          "[\"exerciseId\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.WorkoutSet.WorkoutSet_userId_exerciseId_idx_d4890f32",
+    "label": "Create index \"WorkoutSet_userId_exerciseId_idx_d4890f32\" on \"WorkoutSet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "WorkoutSet_userId_exerciseId_idx_d4890f32",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"WorkoutSet_userId_exerciseId_idx_d4890f32\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"WorkoutSet_userId_exerciseId_idx_d4890f32\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"WorkoutSet_userId_exerciseId_idx_d4890f32\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"WorkoutSet_userId_exerciseId_idx_d4890f32\"",
+        "sql": "CREATE INDEX \"WorkoutSet_userId_exerciseId_idx_d4890f32\" ON \"public\".\"WorkoutSet\" (\"userId\", \"exerciseId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"WorkoutSet_userId_exerciseId_idx_d4890f32\" exists on \"WorkoutSet\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"WorkoutSet_userId_exerciseId_idx_d4890f32\"",
+          "i",
+          "I",
+          "\"public\".\"WorkoutSet\"",
+          "btree",
+          "[\"userId\",\"exerciseId\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.WorkoutSet.WorkoutSet_workoutId_idx_7a4e5f00",
+    "label": "Create index \"WorkoutSet_workoutId_idx_7a4e5f00\" on \"WorkoutSet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "WorkoutSet_workoutId_idx_7a4e5f00",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"WorkoutSet_workoutId_idx_7a4e5f00\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"WorkoutSet_workoutId_idx_7a4e5f00\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"WorkoutSet_workoutId_idx_7a4e5f00\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"WorkoutSet_workoutId_idx_7a4e5f00\"",
+        "sql": "CREATE INDEX \"WorkoutSet_workoutId_idx_7a4e5f00\" ON \"public\".\"WorkoutSet\" (\"workoutId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"WorkoutSet_workoutId_idx_7a4e5f00\" exists on \"WorkoutSet\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"WorkoutSet_workoutId_idx_7a4e5f00\"",
+          "i",
+          "I",
+          "\"public\".\"WorkoutSet\"",
+          "btree",
+          "[\"workoutId\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.RoutineVersion.RoutineVersion_routineId_fkey",
+    "label": "Add foreign key \"RoutineVersion_routineId_fkey\" on \"RoutineVersion\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "RoutineVersion_routineId_fkey",
+        "table": "RoutineVersion"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"RoutineVersion_routineId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "RoutineVersion_routineId_fkey",
+          "public",
+          "\"public\".\"RoutineVersion\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"RoutineVersion_routineId_fkey\" on \"RoutineVersion\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"RoutineVersion_routineId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"RoutineVersion\"\nADD CONSTRAINT \"RoutineVersion_routineId_fkey\"\nFOREIGN KEY (\"routineId\")\nREFERENCES \"public\".\"Routine\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"RoutineVersion_routineId_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "RoutineVersion_routineId_fkey",
+          "public",
+          "\"public\".\"RoutineVersion\"",
+          "f",
+          "[\"routineId\"]",
+          "\"public\".\"Routine\"",
+          "[\"id\"]",
+          "c",
+          "a"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.RoutineVersionExercise.RoutineVersionExercise_routineVersionId_fkey",
+    "label": "Add foreign key \"RoutineVersionExercise_routineVersionId_fkey\" on \"RoutineVersionExercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "RoutineVersionExercise_routineVersionId_fkey",
+        "table": "RoutineVersionExercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"RoutineVersionExercise_routineVersionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "RoutineVersionExercise_routineVersionId_fkey",
+          "public",
+          "\"public\".\"RoutineVersionExercise\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"RoutineVersionExercise_routineVersionId_fkey\" on \"RoutineVersionExercise\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"RoutineVersionExercise_routineVersionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"RoutineVersionExercise\"\nADD CONSTRAINT \"RoutineVersionExercise_routineVersionId_fkey\"\nFOREIGN KEY (\"routineVersionId\")\nREFERENCES \"public\".\"RoutineVersion\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"RoutineVersionExercise_routineVersionId_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "RoutineVersionExercise_routineVersionId_fkey",
+          "public",
+          "\"public\".\"RoutineVersionExercise\"",
+          "f",
+          "[\"routineVersionId\"]",
+          "\"public\".\"RoutineVersion\"",
+          "[\"id\"]",
+          "c",
+          "a"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.RoutineVersionExercise.RoutineVersionExercise_exerciseId_fkey",
+    "label": "Add foreign key \"RoutineVersionExercise_exerciseId_fkey\" on \"RoutineVersionExercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "RoutineVersionExercise_exerciseId_fkey",
+        "table": "RoutineVersionExercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"RoutineVersionExercise_exerciseId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "RoutineVersionExercise_exerciseId_fkey",
+          "public",
+          "\"public\".\"RoutineVersionExercise\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"RoutineVersionExercise_exerciseId_fkey\" on \"RoutineVersionExercise\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"RoutineVersionExercise_exerciseId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"RoutineVersionExercise\"\nADD CONSTRAINT \"RoutineVersionExercise_exerciseId_fkey\"\nFOREIGN KEY (\"exerciseId\")\nREFERENCES \"public\".\"Exercise\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"RoutineVersionExercise_exerciseId_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "RoutineVersionExercise_exerciseId_fkey",
+          "public",
+          "\"public\".\"RoutineVersionExercise\"",
+          "f",
+          "[\"exerciseId\"]",
+          "\"public\".\"Exercise\"",
+          "[\"id\"]",
+          "r",
+          "a"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Workout.Workout_routineVersionId_fkey",
+    "label": "Add foreign key \"Workout_routineVersionId_fkey\" on \"Workout\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Workout_routineVersionId_fkey",
+        "table": "Workout"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Workout_routineVersionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Workout_routineVersionId_fkey",
+          "public",
+          "\"public\".\"Workout\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"Workout_routineVersionId_fkey\" on \"Workout\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Workout_routineVersionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Workout\"\nADD CONSTRAINT \"Workout_routineVersionId_fkey\"\nFOREIGN KEY (\"routineVersionId\")\nREFERENCES \"public\".\"RoutineVersion\" (\"id\")\nON DELETE SET NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Workout_routineVersionId_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "Workout_routineVersionId_fkey",
+          "public",
+          "\"public\".\"Workout\"",
+          "f",
+          "[\"routineVersionId\"]",
+          "\"public\".\"RoutineVersion\"",
+          "[\"id\"]",
+          "n",
+          "a"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.WorkoutSet.WorkoutSet_workoutId_fkey",
+    "label": "Add foreign key \"WorkoutSet_workoutId_fkey\" on \"WorkoutSet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "WorkoutSet_workoutId_fkey",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"WorkoutSet_workoutId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "WorkoutSet_workoutId_fkey",
+          "public",
+          "\"public\".\"WorkoutSet\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"WorkoutSet_workoutId_fkey\" on \"WorkoutSet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"WorkoutSet_workoutId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"WorkoutSet\"\nADD CONSTRAINT \"WorkoutSet_workoutId_fkey\"\nFOREIGN KEY (\"workoutId\")\nREFERENCES \"public\".\"Workout\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"WorkoutSet_workoutId_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "WorkoutSet_workoutId_fkey",
+          "public",
+          "\"public\".\"WorkoutSet\"",
+          "f",
+          "[\"workoutId\"]",
+          "\"public\".\"Workout\"",
+          "[\"id\"]",
+          "c",
+          "a"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.WorkoutSet.WorkoutSet_exerciseId_fkey",
+    "label": "Add foreign key \"WorkoutSet_exerciseId_fkey\" on \"WorkoutSet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "WorkoutSet_exerciseId_fkey",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"WorkoutSet_exerciseId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "WorkoutSet_exerciseId_fkey",
+          "public",
+          "\"public\".\"WorkoutSet\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"WorkoutSet_exerciseId_fkey\" on \"WorkoutSet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"WorkoutSet_exerciseId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"WorkoutSet\"\nADD CONSTRAINT \"WorkoutSet_exerciseId_fkey\"\nFOREIGN KEY (\"exerciseId\")\nREFERENCES \"public\".\"Exercise\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"WorkoutSet_exerciseId_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "WorkoutSet_exerciseId_fkey",
+          "public",
+          "\"public\".\"WorkoutSet\"",
+          "f",
+          "[\"exerciseId\"]",
+          "\"public\".\"Exercise\"",
+          "[\"id\"]",
+          "r",
+          "a"
+        ]
+      }
+    ]
+  }
+]

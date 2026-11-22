@@ -1,9 +1,29 @@
-# Full-stack TypeScript monorepo template
+# Workout Tracker
 
-A starting point for web apps: a React frontend on Vercel's CDN, an Express API on Vercel
-Functions, Postgres on Neon, and Sentry for errors, tracing, logs and metrics.
-The example "items" feature runs through every layer, so the wiring is easy to follow.
-Replace it with your own features.
+A personal strength-training log that Claude can read and write. You plan and log workouts in
+a normal claude.ai chat; Claude uses this app's tools (an MCP server) to save sessions, recall
+what you lifted last time and track progress. The web dashboard is for looking back.
+
+- **Claude tools** (`apps/api/src/features/mcp/mcp.tools.ts`): routines (rotation, with a
+  version history of every plan change), logging (a whole session, or set by set as you go;
+  past sessions can be imported with their date), corrections, last session, personal records,
+  progress, weekly summary, and exercise names (aliases, review, merge).
+- **Dashboard:** this week (sessions, sets, volume, streak), weekly volume, recent PRs;
+  history with set-level fixes; per-exercise last session, records and progress chart;
+  routines with version history.
+- **Training rules:** weights in lb; effort stored as RPE (RIR is converted, RPE = 10 − RIR);
+  dates are calendar dates in `APP_TIMEZONE` (America/Chicago), weeks start Monday; estimated
+  1RM is Epley; warm-ups never count toward volume or records.
+- **Exercise names:** logging never blocks on an unknown name. It's saved as a new
+  _unconfirmed_ exercise with similar existing ones suggested; at the end of the workout Claude
+  asks whether to merge it (the name becomes an alias) or keep it.
+
+Built on [fullstack-template](https://github.com/jrubins/fullstack-template); the rest of this
+README describes that foundation.
+
+---
+
+## The template
 
 **Working with AI agents:** [`AGENTS.md`](AGENTS.md) holds the working rules: architecture,
 the add-a-feature checklist, testing rules and notes on library APIs newer than most models'
@@ -176,7 +196,7 @@ Sentry stays off until a DSN is set (`SENTRY_DSN` for the API, `VITE_SENTRY_DSN`
 
 - **API:** errors (5xx only), request tracing including Express middleware, `pg` and Prisma
   spans, pino logs sent to Sentry Logs, and custom metrics (`Sentry.metrics.count(...)`, see
-  the items service). `src/instrument.ts` must load before the app: both entry points import
+  `workouts.logged` and `sets.logged` in the workouts service). `src/instrument.ts` must load before the app: both entry points import
   it first and then load the app with a dynamic `import()`.
 - **Web:** errors (including React render errors), page-load and navigation tracing via the
   TanStack Router integration, and session replay. Replays are recorded only when an error

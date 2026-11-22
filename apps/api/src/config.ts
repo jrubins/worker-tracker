@@ -22,6 +22,18 @@ const EnvSchema = z
     DATABASE_URL: z.url(),
     /** Comma-separated list of browser origins allowed to call the API. */
     CORS_ORIGINS: commaList,
+    /** The user's time zone: "today", dates and Monday-start weeks are computed in it. */
+    APP_TIMEZONE: z
+      .string()
+      .default('America/Chicago')
+      .refine((timeZone) => {
+        try {
+          new Intl.DateTimeFormat('en-US', { timeZone });
+          return true;
+        } catch {
+          return false;
+        }
+      }, 'unknown IANA time zone, e.g. America/Chicago'),
 
     // --- Auth (WorkOS AuthKit) ---------------------------------------------------------
     /** WorkOS client ID (client_...): verifies the web app's session tokens. */

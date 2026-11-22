@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { createDb } from '@app/db';
+import type { Express } from 'express';
+import request from 'supertest';
 import { pino } from 'pino';
 import { createApp } from '../src/app.ts';
 import { signTestToken } from '../src/auth/tokens.ts';
@@ -49,4 +51,23 @@ export function uniqueUserId(): string {
 /** `Authorization` header value for a test token. */
 export async function bearer(userId: string): Promise<string> {
   return `Bearer ${await signTestToken(TEST_SECRET, userId)}`;
+}
+
+/**
+ * A brand-new signed-in user for one test, with request helpers that send their token.
+ * Each test acting as its own user keeps tests independent (see "Testing rules").
+ */
+export async function newUser(app: Express) {
+  const userId = uniqueUserId();
+  const auth = await bearer(userId);
+  return {
+    userId,
+    auth,
+    get: (url: string) => request(app).get(url).set('Authorization', auth),
+    post: (url: string, body: object = {}) =>
+      request(app).post(url).set('Authorization', auth).send(body),
+    patch: (url: string, body: object) =>
+      request(app).patch(url).set('Authorization', auth).send(body),
+    delete: (url: string) => request(app).delete(url).set('Authorization', auth),
+  };
 }

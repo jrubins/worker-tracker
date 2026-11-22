@@ -12,8 +12,14 @@ import type { Config } from './config.ts';
 import { devAuthRouter } from './features/auth/dev-auth.routes.ts';
 import { healthRouter } from './features/health/health.routes.ts';
 import { createHealthService } from './features/health/health.service.ts';
-import { createItemsService } from './features/items/items.service.ts';
-import { itemsRouter } from './features/items/items.routes.ts';
+import { exercisesRouter } from './features/exercises/exercises.routes.ts';
+import { createExercisesService } from './features/exercises/exercises.service.ts';
+import { routinesRouter } from './features/routines/routines.routes.ts';
+import { createRoutinesService } from './features/routines/routines.service.ts';
+import { statsRouter } from './features/stats/stats.routes.ts';
+import { createStatsService } from './features/stats/stats.service.ts';
+import { setsRouter, workoutsRouter } from './features/workouts/workouts.routes.ts';
+import { createWorkoutsService } from './features/workouts/workouts.service.ts';
 import { mcpHandlers, mcpMetadataRouter } from './features/mcp/mcp.routes.ts';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.ts';
 
@@ -42,7 +48,12 @@ export function createApp({ config, db, logger, verifier: injected }: AppDeps): 
       mcpResourceUrl: config.MCP_RESOURCE_URL,
       testSecret: config.AUTH_TEST_SECRET,
     });
-  const services = { items: createItemsService(db) };
+  const timeZone = config.APP_TIMEZONE;
+  const exercises = createExercisesService(db);
+  const routines = createRoutinesService(db, exercises);
+  const workouts = createWorkoutsService(db, { exercises, routines, timeZone });
+  const stats = createStatsService(db, { exercises, timeZone });
+  const services = { exercises, routines, workouts, stats };
 
   app.disable('x-powered-by');
   app.set('trust proxy', true);
@@ -90,7 +101,11 @@ export function createApp({ config, db, logger, verifier: injected }: AppDeps): 
 
   // --- Everything below requires a signed-in user -----------------------------------------
   app.use(requireUser(verifier, config.ALLOWED_USER_IDS));
-  app.use('/items', itemsRouter(services.items));
+  app.use('/exercises', exercisesRouter(exercises, stats));
+  app.use('/workouts', workoutsRouter(workouts));
+  app.use('/sets', setsRouter(workouts));
+  app.use('/routines', routinesRouter(routines));
+  app.use('/stats', statsRouter(stats));
 
   app.use(notFoundHandler);
   // Reports 5xx errors to Sentry (no-op while Sentry is disabled), then our JSON error handler.

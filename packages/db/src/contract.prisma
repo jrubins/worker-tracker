@@ -1,16 +1,122 @@
 // use prisma-8
 
 // Data contract: the source of truth for the database schema.
-// After editing: `pnpm --filter @app/db emit`, then `pnpm --filter @app/db migration:plan`.
+// After editing: `pnpm --filter @app/db emit`, then `pnpm --filter @app/db migration:plan --name <slug>`.
+//
+// Ownership: tables queried directly carry `userId` (the WorkOS user ID) and every query filters
+// by it. Child rows (routine versions and their exercises) are only reached through an owned
+// parent. Weights are pounds.
 
-// Example model, used by the example API routes and web page. Replace it with your own.
-model Item {
+// A lift, e.g. "Bench Press". `nameKey` is the normalized name (lowercase, no punctuation,
+// abbreviations expanded), unique per user, so "bench press" and "Bench-Press" are one exercise.
+model Exercise {
   id        Int                @id @default(autoincrement())
-  // Owner: the authenticated user's ID (WorkOS `sub`). Every query filters by it.
   userId    String
   name      String
+  nameKey   String
+  // Other names that resolve to this exercise ("bench", "BP"), as typed.
+  aliases   String[]
+  // barbell | dumbbell | machine | cable | bodyweight | other
+  equipment String?
+  notes     String?
+  // False when created automatically while logging an unrecognized name: Claude asks at the end
+  // of the workout whether to keep it or merge it into an existing exercise.
+  confirmed Boolean            @default(true)
   createdAt DateTime           @default(now()) @onCreate(now())
   updatedAt temporal.UpdatedAt
+  sets      WorkoutSet[]
+  planned   RoutineVersionExercise[]
 
-  @@index([userId, createdAt])
+  @@unique([userId, nameKey])
+}
+
+// A named workout in the rotation, e.g. "Push A". Its plan lives in versions.
+model Routine {
+  id        Int                @id @default(autoincrement())
+  userId    String
+  name      String
+  nameKey   String
+  // Order in the rotation (lowest first).
+  position  Int                @default(0)
+  archived  Boolean            @default(false)
+  createdAt DateTime           @default(now()) @onCreate(now())
+  updatedAt temporal.UpdatedAt
+  versions  RoutineVersion[]
+
+  @@unique([userId, nameKey])
+}
+
+// An immutable snapshot of a routine's plan. Saving a routine adds a version; old ones are kept.
+model RoutineVersion {
+  id         Int                      @id @default(autoincrement())
+  routineId  Int
+  routine    Routine                  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  version    Int
+  notes      String?
+  // What changed and why, e.g. "swapped incline press for dips: shoulder irritation".
+  changeNote String?
+  createdAt  DateTime                 @default(now()) @onCreate(now())
+  exercises  RoutineVersionExercise[]
+  workouts   Workout[]
+
+  @@unique([routineId, version])
+}
+
+model RoutineVersionExercise {
+  id               Int            @id @default(autoincrement())
+  routineVersionId Int
+  routineVersion   RoutineVersion @relation(fields: [routineVersionId], references: [id], onDelete: Cascade)
+  exerciseId       Int
+  // An exercise used in a plan can't be deleted (merge it instead, which moves these rows).
+  exercise         Exercise       @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  position         Int
+  targetSets       Int?
+  // Free text: "5", "8-12", "AMRAP".
+  targetReps       String?
+  targetRpe        Decimal(precision: 3, scale: 1)?
+  notes            String?
+
+  @@index([routineVersionId])
+  @@index([exerciseId])
+}
+
+// One training session. `date` is the calendar date as the user reports it (their time zone).
+model Workout {
+  id               Int                @id @default(autoincrement())
+  userId           String
+  date             Date
+  // The routine version this session followed, if any.
+  routineVersionId Int?
+  routineVersion   RoutineVersion?    @relation(fields: [routineVersionId], references: [id], onDelete: SetNull)
+  startedAt        DateTime?
+  durationMinutes  Int?
+  notes            String?
+  createdAt        DateTime           @default(now()) @onCreate(now())
+  updatedAt        temporal.UpdatedAt
+  sets             WorkoutSet[]
+
+  @@index([userId, date])
+}
+
+// One set. Weight is the load in lb (for bodyweight lifts, the added weight; null when none).
+// Effort is stored as RPE; RIR input is converted (RPE = 10 - RIR).
+model WorkoutSet {
+  id         Int                             @id @default(autoincrement())
+  userId     String
+  workoutId  Int
+  workout    Workout                         @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exerciseId Int
+  // An exercise with logged sets can't be deleted (merge it instead, which moves the sets).
+  exercise   Exercise                        @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  // Order within the workout.
+  position   Int
+  weightLb   Decimal(precision: 6, scale: 2)?
+  reps       Int
+  rpe        Decimal(precision: 3, scale: 1)?
+  warmup     Boolean                         @default(false)
+  notes      String?
+  createdAt  DateTime                        @default(now()) @onCreate(now())
+
+  @@index([workoutId])
+  @@index([userId, exerciseId])
 }

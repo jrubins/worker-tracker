@@ -23,9 +23,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'d66c50f1ad3d9edd716db2f69f1e229877832c8c35121487a8f8e43df1253466'>;
+  StorageHashBase<'a225b048d35036ac5d28668261ba5179dbca739648005a3a4e18b9a031e7580f'>;
 export type ExecutionHash =
-  ExecutionHashBase<'d388457b28c2848c8802c3f452f18b5904772d0acccd84bc3c8e1aa5e02d2104'>;
+  ExecutionHashBase<'4675ad76b62c474cbc7fabbeb9f99c69c7a51e55ae5a203b5c19bc352510dbd3'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -309,19 +309,98 @@ export type StorageColumnInputTypes = ColumnTypesFromStorage<
 >;
 
 export namespace Models {
-  export type public_Item = {
-    createdAt: FieldOutputTypes['public']['Item']['createdAt'];
-    id: FieldOutputTypes['public']['Item']['id'];
-    name: FieldOutputTypes['public']['Item']['name'];
-    updatedAt: FieldOutputTypes['public']['Item']['updatedAt'];
-    userId: FieldOutputTypes['public']['Item']['userId'];
-    readonly [RelationKeys]?: never;
+  export type public_Exercise = {
+    aliases: FieldOutputTypes['public']['Exercise']['aliases'];
+    confirmed: FieldOutputTypes['public']['Exercise']['confirmed'];
+    createdAt: FieldOutputTypes['public']['Exercise']['createdAt'];
+    equipment: FieldOutputTypes['public']['Exercise']['equipment'];
+    id: FieldOutputTypes['public']['Exercise']['id'];
+    name: FieldOutputTypes['public']['Exercise']['name'];
+    nameKey: FieldOutputTypes['public']['Exercise']['nameKey'];
+    notes: FieldOutputTypes['public']['Exercise']['notes'];
+    updatedAt: FieldOutputTypes['public']['Exercise']['updatedAt'];
+    userId: FieldOutputTypes['public']['Exercise']['userId'];
+    planned: public_RoutineVersionExercise[];
+    sets: public_WorkoutSet[];
+    readonly [RelationKeys]?: 'planned' | 'sets';
+  };
+  export type public_Routine = {
+    archived: FieldOutputTypes['public']['Routine']['archived'];
+    createdAt: FieldOutputTypes['public']['Routine']['createdAt'];
+    id: FieldOutputTypes['public']['Routine']['id'];
+    name: FieldOutputTypes['public']['Routine']['name'];
+    nameKey: FieldOutputTypes['public']['Routine']['nameKey'];
+    position: FieldOutputTypes['public']['Routine']['position'];
+    updatedAt: FieldOutputTypes['public']['Routine']['updatedAt'];
+    userId: FieldOutputTypes['public']['Routine']['userId'];
+    versions: public_RoutineVersion[];
+    readonly [RelationKeys]?: 'versions';
+  };
+  export type public_RoutineVersion = {
+    changeNote: FieldOutputTypes['public']['RoutineVersion']['changeNote'];
+    createdAt: FieldOutputTypes['public']['RoutineVersion']['createdAt'];
+    id: FieldOutputTypes['public']['RoutineVersion']['id'];
+    notes: FieldOutputTypes['public']['RoutineVersion']['notes'];
+    routineId: FieldOutputTypes['public']['RoutineVersion']['routineId'];
+    version: FieldOutputTypes['public']['RoutineVersion']['version'];
+    exercises: public_RoutineVersionExercise[];
+    routine: public_Routine;
+    workouts: public_Workout[];
+    readonly [RelationKeys]?: 'exercises' | 'routine' | 'workouts';
+  };
+  export type public_RoutineVersionExercise = {
+    exerciseId: FieldOutputTypes['public']['RoutineVersionExercise']['exerciseId'];
+    id: FieldOutputTypes['public']['RoutineVersionExercise']['id'];
+    notes: FieldOutputTypes['public']['RoutineVersionExercise']['notes'];
+    position: FieldOutputTypes['public']['RoutineVersionExercise']['position'];
+    routineVersionId: FieldOutputTypes['public']['RoutineVersionExercise']['routineVersionId'];
+    targetReps: FieldOutputTypes['public']['RoutineVersionExercise']['targetReps'];
+    targetRpe: FieldOutputTypes['public']['RoutineVersionExercise']['targetRpe'];
+    targetSets: FieldOutputTypes['public']['RoutineVersionExercise']['targetSets'];
+    exercise: public_Exercise;
+    routineVersion: public_RoutineVersion;
+    readonly [RelationKeys]?: 'exercise' | 'routineVersion';
+  };
+  export type public_Workout = {
+    createdAt: FieldOutputTypes['public']['Workout']['createdAt'];
+    date: FieldOutputTypes['public']['Workout']['date'];
+    durationMinutes: FieldOutputTypes['public']['Workout']['durationMinutes'];
+    id: FieldOutputTypes['public']['Workout']['id'];
+    notes: FieldOutputTypes['public']['Workout']['notes'];
+    routineVersionId: FieldOutputTypes['public']['Workout']['routineVersionId'];
+    startedAt: FieldOutputTypes['public']['Workout']['startedAt'];
+    updatedAt: FieldOutputTypes['public']['Workout']['updatedAt'];
+    userId: FieldOutputTypes['public']['Workout']['userId'];
+    routineVersion: public_RoutineVersion | null;
+    sets: public_WorkoutSet[];
+    readonly [RelationKeys]?: 'routineVersion' | 'sets';
+  };
+  export type public_WorkoutSet = {
+    createdAt: FieldOutputTypes['public']['WorkoutSet']['createdAt'];
+    exerciseId: FieldOutputTypes['public']['WorkoutSet']['exerciseId'];
+    id: FieldOutputTypes['public']['WorkoutSet']['id'];
+    notes: FieldOutputTypes['public']['WorkoutSet']['notes'];
+    position: FieldOutputTypes['public']['WorkoutSet']['position'];
+    reps: FieldOutputTypes['public']['WorkoutSet']['reps'];
+    rpe: FieldOutputTypes['public']['WorkoutSet']['rpe'];
+    userId: FieldOutputTypes['public']['WorkoutSet']['userId'];
+    warmup: FieldOutputTypes['public']['WorkoutSet']['warmup'];
+    weightLb: FieldOutputTypes['public']['WorkoutSet']['weightLb'];
+    workoutId: FieldOutputTypes['public']['WorkoutSet']['workoutId'];
+    exercise: public_Exercise;
+    workout: public_Workout;
+    readonly [RelationKeys]?: 'exercise' | 'workout';
   };
 }
 
 export declare const models: {
   public: {
-    Item: Models.public_Item;
+    Exercise: Models.public_Exercise;
+    Routine: Models.public_Routine;
+    RoutineVersion: Models.public_RoutineVersion;
+    RoutineVersionExercise: Models.public_RoutineVersionExercise;
+    Workout: Models.public_Workout;
+    WorkoutSet: Models.public_WorkoutSet;
   };
 };
 
@@ -343,8 +422,97 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
-            readonly Item: {
+            readonly Exercise: {
               columns: {
+                readonly aliases: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: { readonly elementNullable: false };
+                };
+                readonly confirmed: {
+                  readonly dataType: 'pg/bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly equipment: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly name: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly nameKey: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly notes: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly updatedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly userId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['userId', 'nameKey'] }];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
+            readonly Routine: {
+              columns: {
+                readonly archived: {
+                  readonly dataType: 'pg/bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                  readonly many: false;
+                };
                 readonly createdAt: {
                   readonly dataType: 'pg/timestamptz';
                   readonly codecId: 'pg/timestamptz-date@1';
@@ -369,6 +537,261 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly many: false;
                 };
+                readonly nameKey: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly position: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                  readonly many: false;
+                };
+                readonly updatedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly userId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['userId', 'nameKey'] }];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
+            readonly RoutineVersion: {
+              columns: {
+                readonly changeNote: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly notes: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly routineId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly version: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['routineId', 'version'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'RoutineVersion_routineId_idx_fa038a10';
+                  readonly prefix: 'RoutineVersion_routineId_idx';
+                  readonly columns: readonly ['routineId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'RoutineVersion';
+                    readonly columns: readonly ['routineId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Routine';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly RoutineVersionExercise: {
+              columns: {
+                readonly exerciseId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly notes: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly position: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly routineVersionId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly targetReps: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly targetRpe: {
+                  readonly dataType: 'pg/numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly precision: 3; readonly scale: 1 };
+                  readonly many: false;
+                };
+                readonly targetSets: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'RoutineVersionExercise_exerciseId_idx_3c45a784';
+                  readonly prefix: 'RoutineVersionExercise_exerciseId_idx';
+                  readonly columns: readonly ['exerciseId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'RoutineVersionExercise_routineVersionId_idx_02c20e94';
+                  readonly prefix: 'RoutineVersionExercise_routineVersionId_idx';
+                  readonly columns: readonly ['routineVersionId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'RoutineVersionExercise';
+                    readonly columns: readonly ['routineVersionId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'RoutineVersion';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'RoutineVersionExercise';
+                    readonly columns: readonly ['exerciseId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Exercise';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly Workout: {
+              columns: {
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly date: {
+                  readonly dataType: 'pg/date';
+                  readonly codecId: 'pg/date-string@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly durationMinutes: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly notes: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly routineVersionId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly startedAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
                 readonly updatedAt: {
                   readonly dataType: 'pg/timestamptz';
                   readonly codecId: 'pg/timestamptz-date@1';
@@ -387,13 +810,162 @@ type ContractBase = Omit<
               uniques: readonly [];
               indexes: readonly [
                 {
-                  readonly name: 'Item_userId_createdAt_idx_f726f04a';
-                  readonly prefix: 'Item_userId_createdAt_idx';
-                  readonly columns: readonly ['userId', 'createdAt'];
+                  readonly name: 'Workout_routineVersionId_idx_02c20e94';
+                  readonly prefix: 'Workout_routineVersionId_idx';
+                  readonly columns: readonly ['routineVersionId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'Workout_userId_date_idx_b0e9c250';
+                  readonly prefix: 'Workout_userId_date_idx';
+                  readonly columns: readonly ['userId', 'date'];
                   readonly unique: false;
                 },
               ];
-              foreignKeys: readonly [];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Workout';
+                    readonly columns: readonly ['routineVersionId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'RoutineVersion';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly WorkoutSet: {
+              columns: {
+                readonly createdAt: {
+                  readonly dataType: 'pg/timestamptz';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                  readonly typeParams: { readonly precision: 3 };
+                  readonly many: false;
+                };
+                readonly exerciseId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly id: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly notes: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
+                readonly position: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly reps: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly rpe: {
+                  readonly dataType: 'pg/numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly precision: 3; readonly scale: 1 };
+                  readonly many: false;
+                };
+                readonly userId: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly warmup: {
+                  readonly dataType: 'pg/bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                  readonly many: false;
+                };
+                readonly weightLb: {
+                  readonly dataType: 'pg/numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly precision: 6; readonly scale: 2 };
+                  readonly many: false;
+                };
+                readonly workoutId: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'WorkoutSet_exerciseId_idx_3c45a784';
+                  readonly prefix: 'WorkoutSet_exerciseId_idx';
+                  readonly columns: readonly ['exerciseId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'WorkoutSet_userId_exerciseId_idx_d4890f32';
+                  readonly prefix: 'WorkoutSet_userId_exerciseId_idx';
+                  readonly columns: readonly ['userId', 'exerciseId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'WorkoutSet_workoutId_idx_7a4e5f00';
+                  readonly prefix: 'WorkoutSet_workoutId_idx';
+                  readonly columns: readonly ['workoutId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'WorkoutSet';
+                    readonly columns: readonly ['workoutId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Workout';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'WorkoutSet';
+                    readonly columns: readonly ['exerciseId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'Exercise';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
             };
           };
         };
@@ -406,14 +978,125 @@ type ContractBase = Omit<
   readonly target: 'postgres';
   readonly targetFamily: 'sql';
   readonly roots: {
-    readonly Item: { readonly namespace: 'public' & NamespaceId; readonly model: 'Item' };
+    readonly Exercise: { readonly namespace: 'public' & NamespaceId; readonly model: 'Exercise' };
+    readonly Routine: { readonly namespace: 'public' & NamespaceId; readonly model: 'Routine' };
+    readonly RoutineVersion: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'RoutineVersion';
+    };
+    readonly RoutineVersionExercise: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'RoutineVersionExercise';
+    };
+    readonly Workout: { readonly namespace: 'public' & NamespaceId; readonly model: 'Workout' };
+    readonly WorkoutSet: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'WorkoutSet';
+    };
   };
   readonly domain: {
     readonly namespaces: {
       readonly public: {
         readonly models: {
-          readonly Item: {
+          readonly Exercise: {
             readonly fields: {
+              readonly aliases: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+                readonly many: { readonly elementNullable: false };
+              };
+              readonly confirmed: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly equipment: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly name: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly nameKey: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly notes: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly planned: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'RoutineVersionExercise';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['exerciseId'];
+                };
+              };
+              readonly sets: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'WorkoutSet';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['exerciseId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'Exercise';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly aliases: { readonly column: 'aliases' };
+                readonly confirmed: { readonly column: 'confirmed' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly equipment: { readonly column: 'equipment' };
+                readonly id: { readonly column: 'id' };
+                readonly name: { readonly column: 'name' };
+                readonly nameKey: { readonly column: 'nameKey' };
+                readonly notes: { readonly column: 'notes' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+                readonly userId: { readonly column: 'userId' };
+              };
+            };
+          };
+          readonly Routine: {
+            readonly fields: {
+              readonly archived: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -430,6 +1113,14 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly nameKey: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly position: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
               readonly updatedAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -443,16 +1134,386 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
             };
-            readonly relations: Record<string, never>;
+            readonly relations: {
+              readonly versions: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'RoutineVersion';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['routineId'];
+                };
+              };
+            };
             readonly storage: {
-              readonly table: 'Item';
+              readonly table: 'Routine';
               readonly namespaceId: 'public';
               readonly fields: {
+                readonly archived: { readonly column: 'archived' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly id: { readonly column: 'id' };
                 readonly name: { readonly column: 'name' };
+                readonly nameKey: { readonly column: 'nameKey' };
+                readonly position: { readonly column: 'position' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
                 readonly userId: { readonly column: 'userId' };
+              };
+            };
+          };
+          readonly RoutineVersion: {
+            readonly fields: {
+              readonly changeNote: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly notes: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly routineId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly version: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly exercises: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'RoutineVersionExercise';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['routineVersionId'];
+                };
+              };
+              readonly routine: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Routine';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['routineId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly workouts: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Workout';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['routineVersionId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'RoutineVersion';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly changeNote: { readonly column: 'changeNote' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly id: { readonly column: 'id' };
+                readonly notes: { readonly column: 'notes' };
+                readonly routineId: { readonly column: 'routineId' };
+                readonly version: { readonly column: 'version' };
+              };
+            };
+          };
+          readonly RoutineVersionExercise: {
+            readonly fields: {
+              readonly exerciseId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly notes: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly position: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly routineVersionId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly targetReps: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly targetRpe: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly typeParams: { readonly precision: 3; readonly scale: 1 };
+                };
+              };
+              readonly targetSets: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly exercise: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Exercise';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['exerciseId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly routineVersion: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'RoutineVersion';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['routineVersionId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'RoutineVersionExercise';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly exerciseId: { readonly column: 'exerciseId' };
+                readonly id: { readonly column: 'id' };
+                readonly notes: { readonly column: 'notes' };
+                readonly position: { readonly column: 'position' };
+                readonly routineVersionId: { readonly column: 'routineVersionId' };
+                readonly targetReps: { readonly column: 'targetReps' };
+                readonly targetRpe: { readonly column: 'targetRpe' };
+                readonly targetSets: { readonly column: 'targetSets' };
+              };
+            };
+          };
+          readonly Workout: {
+            readonly fields: {
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly date: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/date-string@1' };
+              };
+              readonly durationMinutes: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly notes: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly routineVersionId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly startedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly routineVersion: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'RoutineVersion';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: true;
+                readonly on: {
+                  readonly localFields: readonly ['routineVersionId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly sets: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'WorkoutSet';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['workoutId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'Workout';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly date: { readonly column: 'date' };
+                readonly durationMinutes: { readonly column: 'durationMinutes' };
+                readonly id: { readonly column: 'id' };
+                readonly notes: { readonly column: 'notes' };
+                readonly routineVersionId: { readonly column: 'routineVersionId' };
+                readonly startedAt: { readonly column: 'startedAt' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+                readonly userId: { readonly column: 'userId' };
+              };
+            };
+          };
+          readonly WorkoutSet: {
+            readonly fields: {
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-date@1';
+                  readonly typeParams: { readonly precision: 3 };
+                };
+              };
+              readonly exerciseId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly notes: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly position: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly reps: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly rpe: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly typeParams: { readonly precision: 3; readonly scale: 1 };
+                };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly warmup: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly weightLb: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly typeParams: { readonly precision: 6; readonly scale: 2 };
+                };
+              };
+              readonly workoutId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly exercise: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Exercise';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['exerciseId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly workout: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Workout';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['workoutId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'WorkoutSet';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly exerciseId: { readonly column: 'exerciseId' };
+                readonly id: { readonly column: 'id' };
+                readonly notes: { readonly column: 'notes' };
+                readonly position: { readonly column: 'position' };
+                readonly reps: { readonly column: 'reps' };
+                readonly rpe: { readonly column: 'rpe' };
+                readonly userId: { readonly column: 'userId' };
+                readonly warmup: { readonly column: 'warmup' };
+                readonly weightLb: { readonly column: 'weightLb' };
+                readonly workoutId: { readonly column: 'workoutId' };
               };
             };
           };
@@ -500,7 +1561,7 @@ type ContractBase = Omit<
             readonly params: { readonly precision: 3 };
           };
           readonly ref: {
-            readonly entry: 'Item';
+            readonly entry: 'Exercise';
             readonly field: 'createdAt';
             readonly namespace: 'public';
           };
@@ -517,8 +1578,90 @@ type ContractBase = Omit<
             readonly params: { readonly precision: 3 };
           };
           readonly ref: {
-            readonly entry: 'Item';
+            readonly entry: 'Exercise';
             readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly ref: {
+            readonly entry: 'Routine';
+            readonly field: 'createdAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly onUpdate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly ref: {
+            readonly entry: 'Routine';
+            readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly ref: {
+            readonly entry: 'RoutineVersion';
+            readonly field: 'createdAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly ref: {
+            readonly entry: 'Workout';
+            readonly field: 'createdAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly onUpdate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly ref: {
+            readonly entry: 'Workout';
+            readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: {
+            readonly id: 'timestampNow';
+            readonly kind: 'generator';
+            readonly params: { readonly precision: 3 };
+          };
+          readonly ref: {
+            readonly entry: 'WorkoutSet';
+            readonly field: 'createdAt';
             readonly namespace: 'public';
           };
         },

@@ -14,7 +14,7 @@ test.describe('signed out', () => {
     await page.getByLabel('User ID').fill(`e2e-signin-${randomUUID()}`);
     await page.getByRole('button', { name: 'Sign in' }).click();
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'This week' })).toBeVisible();
   });
 });
 
@@ -27,24 +27,24 @@ test('signs out', async ({ page, user }) => {
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
 });
 
-test("doesn't show other users' items", async ({ page, api, playwright }) => {
-  // Another user's item, created through the API as that user.
+test("doesn't show other users' workouts", async ({ page, api, playwright }) => {
+  // Another user's workout, logged through the API as that user.
   const other = await playwright.request.newContext({ baseURL: API_URL });
   const signIn = await other.post('/auth/dev-token', {
     data: { userId: `e2e-other-${randomUUID()}` },
   });
   const { token } = DevTokenResponseSchema.parse(await signIn.json());
-  const foreign = unique('Foreign');
-  await other.post('/items', {
-    data: { name: foreign },
+  const foreign = unique('Foreign Lift');
+  await other.post('/workouts', {
+    data: { exercises: [{ exercise: foreign, sets: [{ reps: 5 }] }] },
     headers: { Authorization: `Bearer ${token}` },
   });
   await other.dispose();
-  // And one of our own, so the list isn't empty.
-  const mine = unique('Mine');
-  await api.post('/items', { data: { name: mine } });
+  // And one of our own.
+  const mine = unique('My Lift');
+  await api.post('/workouts', { data: { exercises: [{ exercise: mine, sets: [{ reps: 5 }] }] } });
 
-  await page.goto('/items');
+  await page.goto('/exercises');
 
   await expect(page.getByText(mine)).toBeVisible();
   await expect(page.getByText(foreign)).toHaveCount(0);

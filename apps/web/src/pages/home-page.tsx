@@ -1,49 +1,55 @@
-import { useQuery } from '@tanstack/react-query';
-import { Badge } from '@/components/ui/badge';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { countByDay } from '@/features/items/count-by-day';
-import { ItemsPerDayChart } from '@/features/items/items-per-day-chart';
-import { healthQueryOptions, itemsQueryOptions } from '@/features/items/queries';
+import { formatNumber } from '@/lib/format';
+import { RecentPrs } from '@/features/stats/recent-prs';
+import { dashboardQueryOptions } from '@/features/stats/queries';
+import { WeeklyVolumeChart } from '@/features/stats/weekly-volume-chart';
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border p-4">
+      <dt className="text-muted-foreground text-sm">{label}</dt>
+      <dd className="text-2xl font-semibold">{value}</dd>
+    </div>
+  );
+}
 
 export function HomePage() {
-  const health = useQuery(healthQueryOptions);
-  const items = useQuery(itemsQueryOptions);
+  const { data } = useSuspenseQuery(dashboardQueryOptions);
+  const thisWeek = data.weekly.weeks.at(-1);
+  const streak = data.weekly.streakWeeks;
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Overview</h1>
+      <h1 className="text-2xl font-semibold">This week</h1>
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat label="Sessions" value={String(thisWeek?.sessions ?? 0)} />
+        <Stat label="Working sets" value={String(thisWeek?.workingSets ?? 0)} />
+        <Stat label="Volume" value={`${formatNumber(thisWeek?.volumeLb ?? 0)} lb`} />
+        <Stat label="Streak" value={`${streak} ${streak === 1 ? 'week' : 'weeks'}`} />
+      </dl>
+
       <Card>
         <CardHeader>
           <CardTitle>
-            <h2>API status</h2>
+            <h2>Weekly volume</h2>
           </CardTitle>
-          <CardDescription>Live check of the API and its database.</CardDescription>
+          <CardDescription>Working sets only, last 8 weeks.</CardDescription>
         </CardHeader>
         <CardContent>
-          {health.isPending ? (
-            <p className="text-muted-foreground text-sm">Checking…</p>
-          ) : health.isError ? (
-            <Badge variant="destructive">Unreachable</Badge>
-          ) : (
-            <div className="flex gap-2">
-              <Badge variant={health.data.status === 'ok' ? 'default' : 'destructive'}>
-                API {health.data.status}
-              </Badge>
-              <Badge variant="secondary">Database {health.data.database}</Badge>
-            </div>
-          )}
+          <WeeklyVolumeChart weeks={data.weekly.weeks} />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>
-            <h2>Items per day</h2>
+            <h2>Recent personal records</h2>
           </CardTitle>
-          <CardDescription>Example TanStack Charts chart.</CardDescription>
+          <CardDescription>New best estimated 1RMs in the last 30 days.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ItemsPerDayChart data={countByDay(items.data ?? [])} />
+          <RecentPrs prs={data.recentPrs} />
         </CardContent>
       </Card>
     </div>

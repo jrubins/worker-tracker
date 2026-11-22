@@ -99,21 +99,21 @@ describe('API sign-in rules', () => {
 
   it('lets allowlisted users in', async () => {
     await request(app)
-      .get('/items')
+      .get('/workouts')
       .set('Authorization', await bearer(allowed))
       .expect(200);
   });
 
   it('forbids users outside ALLOWED_USER_IDS', async () => {
     const res = await request(app)
-      .get('/items')
+      .get('/workouts')
       .set('Authorization', await bearer(uniqueUserId()))
       .expect(403);
     expect(ApiErrorSchema.parse(res.body).error.code).toBe('forbidden');
   });
 
   it('rejects an invalid token with a WWW-Authenticate challenge', async () => {
-    const res = await request(app).get('/items').set('Authorization', 'Bearer nope').expect(401);
+    const res = await request(app).get('/workouts').set('Authorization', 'Bearer nope').expect(401);
     expect(res.headers['www-authenticate']).toContain('invalid_token');
   });
 
@@ -122,7 +122,7 @@ describe('API sign-in rules', () => {
     const res = await request(app).post('/auth/dev-token').send({ userId }).expect(200);
     const { token } = DevTokenResponseSchema.parse(res.body);
     // Not allowlisted, so 403 proves the token itself was accepted as this user.
-    await request(app).get('/items').set('Authorization', `Bearer ${token}`).expect(403);
+    await request(app).get('/workouts').set('Authorization', `Bearer ${token}`).expect(403);
   });
 });
 
