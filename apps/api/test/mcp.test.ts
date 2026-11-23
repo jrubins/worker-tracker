@@ -233,4 +233,12 @@ describe('authorization server metadata (for older MCP clients)', () => {
       .expect(502);
     expect(ApiErrorSchema.parse(res.body).error.code).toBe('bad_gateway');
   });
+
+  it('reports a 502 when AuthKit is unreachable', async () => {
+    const metadataApp = appWith(() => Promise.reject(new TypeError('fetch failed')));
+    const res = await request(metadataApp)
+      .get('/.well-known/oauth-authorization-server')
+      .expect(502);
+    expect(ApiErrorSchema.parse(res.body).error.code).toBe('bad_gateway');
+  });
 });

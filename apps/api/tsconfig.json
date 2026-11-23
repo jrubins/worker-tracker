@@ -4,5 +4,5 @@
     "types": ["node"],
     "tsBuildInfoFile": "../../node_modules/.tmp/api.tsbuildinfo"
   },
-  "include": ["src", "api", "test", "vitest.config.ts"]
+  "include": ["src", "scripts", "test", "vitest.config.ts"]
 }

@@ -306,6 +306,9 @@ importers:
       '@types/supertest':
         specifier: 7.2.1
         version: 7.2.1
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
       pino-pretty:
         specifier: 13.2.0
         version: 13.2.0
