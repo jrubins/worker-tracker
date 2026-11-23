@@ -17,7 +17,8 @@ tokens. Terraform (`infra/`) handles everything else.
       default branch and protects it.
 - [x] **WorkOS** account and AuthKit application created (see section 3 for its settings).
 - [ ] **HCP Terraform** (free): [sign up](https://app.terraform.io/public/signup/account), then
-      create an organization and a **CLI-driven** workspace named `workout-tracker`. In the
+      create an organization, or reuse an existing one (free accounts can only create a
+      limited number; one organization holds many workspaces), and a **CLI-driven** workspace named `workout-tracker`. In the
       workspace, go to **Settings → General → Execution Mode** and choose **Local**.
 - [ ] **Vercel**: [sign up](https://vercel.com/signup) with GitHub, then
       [install the Vercel GitHub app](https://github.com/apps/vercel/installations/new) on
