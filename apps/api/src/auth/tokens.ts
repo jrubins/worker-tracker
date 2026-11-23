@@ -10,8 +10,11 @@ import {
 /**
  * Access tokens come from three issuers:
  *
- * - **Web app sessions** (WorkOS AuthKit React): issuer `https://api.workos.com`, keys at
- *   `https://api.workos.com/sso/jwks/<clientId>`, and a `client_id` claim naming our app.
+ * - **Web app sessions** (WorkOS AuthKit React): keys at
+ *   `https://api.workos.com/sso/jwks/<clientId>`, naming our app in `client_id` (or `aud`).
+ *   WorkOS's docs show the issuer as `https://api.workos.com`, as
+ *   `https://api.workos.com/user_management/<clientId>`, and (for AuthKit-domain tokens) as the
+ *   AuthKit domain, whose tokens are signed with the domain's keys: all three are accepted.
  * - **MCP clients such as Claude** (AuthKit as OAuth server): issuer is the AuthKit domain,
  *   keys at `<domain>/oauth2/jwks`, and `aud` is our MCP server's URL.
  * - **Test tokens** (local development and automated tests only): HS256, signed with
@@ -21,7 +24,6 @@ import {
  */
 
 export const TEST_ISSUER = 'urn:app:test-auth';
-const WORKOS_SESSION_ISSUERS = ['https://api.workos.com', 'https://api.workos.com/'];
 
 export interface VerifiedToken {
   userId: string;
@@ -77,13 +79,25 @@ export function createTokenVerifier(options: TokenVerifierOptions) {
     async verifySession(token: string): Promise<VerifiedToken> {
       return guard(async () => {
         if (issuerOf(token) === TEST_ISSUER) return toVerified(await verifyTestToken(token));
-        if (!sessionKeys || !options.workosClientId) {
+        const clientId = options.workosClientId;
+        if (!sessionKeys || !clientId) {
           throw new InvalidTokenError('Web sign-in is not configured');
         }
-        const { payload } = await jwtVerify(token, sessionKeys, {
-          issuer: WORKOS_SESSION_ISSUERS,
+        const fromAuthkitDomain = authkitIssuer !== undefined && issuerOf(token) === authkitIssuer;
+        const keys = fromAuthkitDomain ? mcpKeys : sessionKeys;
+        if (!keys) throw new InvalidTokenError('Web sign-in is not configured');
+        const { payload } = await jwtVerify(token, keys, {
+          issuer: [
+            'https://api.workos.com',
+            'https://api.workos.com/',
+            `https://api.workos.com/user_management/${clientId}`,
+            ...(authkitIssuer ? [authkitIssuer] : []),
+          ],
         });
-        if (payload['client_id'] !== options.workosClientId) {
+        // Only tokens for our own app: not another app's, and not an MCP client's (whose
+        // audience is the MCP URL and whose client_id is the MCP client).
+        const audience = typeof payload.aud === 'string' ? [payload.aud] : (payload.aud ?? []);
+        if (payload['client_id'] !== clientId && !audience.includes(clientId)) {
           throw new InvalidTokenError('Token was issued for another application');
         }
         return toVerified(payload);
