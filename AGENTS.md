@@ -176,6 +176,10 @@ Not enforced by tooling, so check yourself:
   workspace packages goes in the `catalog` in `pnpm-workspace.yaml` and is referenced as
   `"catalog:"`. Check that a package is the current recommended one before adding it. New
   install scripts must be approved explicitly (`allowBuilds`).
+- **GitHub Actions:** pin every `uses:` to a full commit SHA with the version in a comment
+  (`actions/checkout@<sha> # v7.0.1`), and check out with `persist-credentials: false`.
+  The `zizmor` CI job audits the workflows and is a required check; run it locally with
+  `uvx zizmor .` (or `pipx run zizmor .`). Dependabot proposes action updates weekly.
 - **Environment variables:** API: add to the Zod schema in `apps/api/src/config.ts`. Web: only
   `VITE_*`, typed in `src/vite-env.d.ts`, read via `src/lib/env.ts`. Always add to
   `.env.example`.
