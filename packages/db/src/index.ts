@@ -42,6 +42,8 @@ export function createDb(url: string, options: CreateDbOptions = {}) {
     async close(): Promise<void> {
       await pool.end();
     },
+    /** The underlying pg pool, for platform hooks such as Vercel's attachDatabasePool. */
+    pool,
   };
 }
 
