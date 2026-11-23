@@ -16,14 +16,16 @@ tokens. Terraform (`infra/`) handles everything else.
 - [x] **`main` branch** created from the first development branch. Terraform makes it the
       default branch and protects it.
 - [x] **WorkOS** account and AuthKit application created (see section 3 for its settings).
-- [ ] **Cloudflare R2** (state storage, free tier): [sign up](https://dash.cloudflare.com/sign-up),
+- [x] **Cloudflare R2** (state storage, free tier): [sign up](https://dash.cloudflare.com/sign-up),
       then open [R2](https://dash.cloudflare.com/?to=/:account/r2/overview) and enable it (it asks
       for a payment method even on the free tier). Create a bucket named `terraform-state`; one
       bucket can hold every project's state, each under its own key (this one:
       `workout-tracker/terraform.tfstate`). Copy your **Account ID** from the R2 overview page.
-- [ ] **Vercel**: [sign up](https://vercel.com/signup) with GitHub, then
+- [x] **Vercel**: [sign up](https://vercel.com/signup) with GitHub, then
       [install the Vercel GitHub app](https://github.com/apps/vercel/installations/new) on
-      `jrubins/worker-tracker` only.
+      `jrubins/worker-tracker` only. Both projects were imported in the Vercel dashboard;
+      Terraform still needs their names and project IDs to adopt them
+      instead of creating new ones. f`).
 - [ ] **Neon**: [sign up](https://console.neon.tech/signup). Terraform creates the project.
 - [ ] **Sentry**: [sign up](https://sentry.io/signup/), then copy the **Organization Slug** from
       [Settings → General Settings](https://sentry.io/settings/) into `sentry_organization` in
