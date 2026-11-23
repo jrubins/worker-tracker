@@ -1,5 +1,6 @@
 import type { Request, RequestHandler } from 'express';
 import { HttpError } from '../lib/http-error.ts';
+import { decodeJwt } from 'jose';
 import { InvalidTokenError, type TokenVerifier } from './tokens.ts';
 
 /** Authenticated user per request, set by `requireUser`. Read it with `currentUserId`. */
@@ -38,6 +39,8 @@ export function requireUser(
       next();
     } catch (error) {
       if (error instanceof InvalidTokenError) {
+        // The reason and issuer (never the token) make rejected sign-ins diagnosable.
+        req.log.warn({ reason: error.message, issuer: issuerOrUndefined(token) }, 'token rejected');
         res.set('WWW-Authenticate', 'Bearer error="invalid_token"');
         throw new HttpError(401, 'unauthorized', 'Invalid or expired token');
       }
@@ -51,4 +54,12 @@ export function currentUserId(req: Request): string {
   const userId = requestUsers.get(req);
   if (!userId) throw new HttpError(401, 'unauthorized', 'Sign in required');
   return userId;
+}
+
+function issuerOrUndefined(token: string): string | undefined {
+  try {
+    return decodeJwt(token).iss;
+  } catch {
+    return undefined;
+  }
 }

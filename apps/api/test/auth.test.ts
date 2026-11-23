@@ -42,13 +42,35 @@ describe('web session tokens', () => {
     });
   });
 
+  it.each([
+    ['the user-management issuer', `https://api.workos.com/user_management/${CLIENT_ID}`],
+    ['the AuthKit domain', AUTHKIT],
+  ])('accepts a session token from %s', async (_label, iss) => {
+    await expect(verifier.verifySession(await sign({ ...session, iss }))).resolves.toMatchObject({
+      userId: 'user_1',
+    });
+  });
+
+  it('accepts our client ID as the audience instead of client_id', async () => {
+    const token = await sign({ iss: AUTHKIT, sub: 'user_1', aud: CLIENT_ID });
+    await expect(verifier.verifySession(token)).resolves.toMatchObject({ userId: 'user_1' });
+  });
+
+  it("rejects an MCP client's token", async () => {
+    const token = await sign({ iss: AUTHKIT, sub: 'user_1', aud: MCP_URL, client_id: 'claude' });
+    await expect(verifier.verifySession(token)).rejects.toBeInstanceOf(InvalidTokenError);
+  });
+
   it("rejects another application's token", async () => {
     const token = await sign({ ...session, client_id: 'client_other' });
     await expect(verifier.verifySession(token)).rejects.toBeInstanceOf(InvalidTokenError);
   });
 
-  it('rejects another issuer', async () => {
-    const token = await sign({ ...session, iss: 'https://evil.example' });
+  it.each([
+    ['an unknown issuer', 'https://evil.example'],
+    ["another app's user-management issuer", 'https://api.workos.com/user_management/client_other'],
+  ])('rejects %s', async (_label, iss) => {
+    const token = await sign({ ...session, iss });
     await expect(verifier.verifySession(token)).rejects.toBeInstanceOf(InvalidTokenError);
   });
 
