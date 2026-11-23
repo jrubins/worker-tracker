@@ -22,7 +22,7 @@ export function RootLayout() {
     user ? (
       <UserMenu
         user={user}
-        onSignOut={signOut}
+        onSignOut={() => void signOut()}
         theme={theme}
         onThemeChange={setTheme}
         showName={showName}

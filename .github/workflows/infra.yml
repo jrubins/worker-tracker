@@ -32,6 +32,7 @@ env:
   # The default GITHUB_TOKEN can't change repository settings or rulesets.
   GITHUB_TOKEN: ${{ secrets.INFRA_GITHUB_TOKEN }}
   TF_VAR_sentry_sourcemaps_token: ${{ secrets.SENTRY_SOURCEMAPS_TOKEN }}
+  TF_VAR_workos_api_key: ${{ secrets.WORKOS_API_KEY }}
 
 defaults:
   run:

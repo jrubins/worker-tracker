@@ -10,7 +10,7 @@ import {
 /**
  * Access tokens come from three issuers:
  *
- * - **Web app sessions** (WorkOS AuthKit React): keys at
+ * - **WorkOS session access tokens** (bearer API clients): keys at
  *   `https://api.workos.com/sso/jwks/<clientId>`, naming our app in `client_id` (or `aud`).
  *   WorkOS's docs show the issuer as `https://api.workos.com`, as
  *   `https://api.workos.com/user_management/<clientId>`, and (for AuthKit-domain tokens) as the

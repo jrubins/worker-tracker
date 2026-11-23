@@ -5,22 +5,21 @@ import { SignInScreen } from './sign-in-screen';
 
 /**
  * Renders the app only for a signed-in user; otherwise the sign-in screen. The router (and so
- * every route loader and query) mounts inside this gate, so API calls always carry a token.
+ * every route loader and query) mounts inside this gate, so API calls always have a session.
  */
 export function SessionGate({ children }: { children: ReactNode }) {
-  const session = useSession();
-  const { status, user, provider, signIn } = session;
+  const { status, user, signInMode, signIn } = useSession();
 
   // WorkOS sends users to /login to start sign-in (the app's "Initiate login URI").
   useEffect(() => {
     if (
       status === 'signed-out' &&
-      provider === 'authkit' &&
+      signInMode === 'workos' &&
       window.location.pathname === '/login'
     ) {
       void signIn();
     }
-  }, [status, provider, signIn]);
+  }, [status, signInMode, signIn]);
 
   // Errors and traces carry the user ID only (no email; see dataCollection in lib/sentry.ts).
   useEffect(() => {
@@ -30,6 +29,12 @@ export function SessionGate({ children }: { children: ReactNode }) {
   if (status === 'loading') {
     return <p className="text-muted-foreground p-8 text-sm">Loading…</p>;
   }
-  if (status === 'signed-out') return <SignInScreen provider={provider} onSignIn={signIn} />;
+  if (status === 'error') {
+    return <p className="p-8 text-sm">Can't reach the server. Check your connection and reload.</p>;
+  }
+  if (status === 'signed-out') {
+    if (signInMode === 'none') return <p className="p-8 text-sm">Sign-in is not configured.</p>;
+    return <SignInScreen provider={signInMode} onSignIn={signIn} />;
+  }
   return children;
 }

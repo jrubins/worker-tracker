@@ -49,17 +49,20 @@ tokens. Terraform (`infra/`) handles everything else.
 ## 2. Credentials
 
 All of these are GitHub Actions secrets on this repository, used only by
-`.github/workflows/infra.yml`. Prefer an expiry, and note it here so rotation isn't a surprise.
+`.github/workflows/infra.yml`. The session cookie's encryption password needs no secret:
+Terraform generates it and writes it straight to Vercel (bump `cookie_password_version` in
+`infra/terraform.tfvars` to replace it, which signs everyone out). Prefer an expiry, and note it here so rotation isn't a surprise.
 
-| Secret                    | What it is                                    | Create it at                                                                                    | Permissions                                                                                                | Expires | Last set |
-| ------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------- | -------- |
-| `R2_ACCESS_KEY_ID`        | R2 API token: Access Key ID                   | [R2 → Manage API tokens](https://dash.cloudflare.com/?to=/:account/r2/api-tokens)               | Object Read & Write, only the `terraform-state` bucket; **no IP filter** (GitHub runners use changing IPs) |         |          |
-| `R2_SECRET_ACCESS_KEY`    | R2 API token: Secret Access Key (same token)  | Shown once when you create the token above                                                      | (same token)                                                                                               |         |          |
-| `VERCEL_API_TOKEN`        | Vercel access token                           | [Vercel → Account settings → Tokens](https://vercel.com/account/settings/tokens)                | Scope: your personal account (or the team)                                                                 |         |          |
-| `NEON_API_KEY`            | Neon API key                                  | [Neon → Account settings → API keys](https://console.neon.tech/app/settings/api-keys)           | Personal key (the whole account)                                                                           |         |          |
-| `SENTRY_AUTH_TOKEN`       | Sentry personal token for Terraform           | [Sentry → User settings → Personal Tokens](https://sentry.io/settings/account/api/auth-tokens/) | `org:read`, `project:admin`, `team:admin`                                                                  |         |          |
-| `INFRA_GITHUB_TOKEN`      | Fine-grained personal access token            | [GitHub → Fine-grained tokens → New](https://github.com/settings/personal-access-tokens/new)    | Only `jrubins/worker-tracker`; Administration: RW                                                          |         |          |
-| `SENTRY_SOURCEMAPS_TOKEN` | Optional: Sentry organization token (uploads) | [Sentry → Settings → Auth Tokens](https://sentry.io/settings/auth-tokens/)                      | Created with the default organization token scopes                                                         |         |          |
+| Secret                    | What it is                                                               | Create it at                                                                                    | Permissions                                                                                                | Expires | Last set |
+| ------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------- | -------- |
+| `R2_ACCESS_KEY_ID`        | R2 API token: Access Key ID                                              | [R2 → Manage API tokens](https://dash.cloudflare.com/?to=/:account/r2/api-tokens)               | Object Read & Write, only the `terraform-state` bucket; **no IP filter** (GitHub runners use changing IPs) |         |          |
+| `R2_SECRET_ACCESS_KEY`    | R2 API token: Secret Access Key (same token)                             | Shown once when you create the token above                                                      | (same token)                                                                                               |         |          |
+| `VERCEL_API_TOKEN`        | Vercel access token                                                      | [Vercel → Account settings → Tokens](https://vercel.com/account/settings/tokens)                | Scope: your personal account (or the team)                                                                 |         |          |
+| `NEON_API_KEY`            | Neon API key                                                             | [Neon → Account settings → API keys](https://console.neon.tech/app/settings/api-keys)           | Personal key (the whole account)                                                                           |         |          |
+| `SENTRY_AUTH_TOKEN`       | Sentry personal token for Terraform                                      | [Sentry → User settings → Personal Tokens](https://sentry.io/settings/account/api/auth-tokens/) | `org:read`, `project:admin`, `team:admin`                                                                  |         |          |
+| `INFRA_GITHUB_TOKEN`      | Fine-grained personal access token                                       | [GitHub → Fine-grained tokens → New](https://github.com/settings/personal-access-tokens/new)    | Only `jrubins/worker-tracker`; Administration: RW                                                          |         |          |
+| `WORKOS_API_KEY`          | WorkOS API key: the API signs browsers in with it (server-side sessions) | [WorkOS → API Keys](https://dashboard.workos.com/api-keys)                                      | The environment with client ID `client_01M82Z3D2JFVXBTRJ4T4EV21V7`                                         |         |          |
+| `SENTRY_SOURCEMAPS_TOKEN` | Optional: Sentry organization token (uploads)                            | [Sentry → Settings → Auth Tokens](https://sentry.io/settings/auth-tokens/)                      | Created with the default organization token scopes                                                         |         |          |
 
 Also set `sentry_sourcemaps_token_version = 1` in `infra/terraform.tfvars` if you add
 `SENTRY_SOURCEMAPS_TOKEN`.
@@ -75,19 +78,19 @@ WorkOS has no Terraform support for these settings yet, so they're set in the
 aren't secrets. They're also in `infra/terraform.tfvars`. The dashboard's layout changes; its
 search box is the quickest way to find each setting.
 
-| Setting                                                      | Value                                                                       | Done |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------- | ---- |
-| Client ID                                                    | `client_01M82Z3D2JFVXBTRJ4T4EV21V7`                                         | [x]  |
-| AuthKit domain                                               | `https://constant-precision-53.authkit.app`                                 | [x]  |
-| Redirects → Redirect URI (local)                             | `http://localhost:5173`                                                     | [ ]  |
-| Redirects → Redirect URI (production)                        | `https://workout-tracker-web-henna.vercel.app`                              | [ ]  |
-| Redirects → Initiate login URI                               | `https://workout-tracker-web-henna.vercel.app/login`                        | [ ]  |
-| Redirects → Sign-out redirect                                | `https://workout-tracker-web-henna.vercel.app` (sign-out fails without one) | [ ]  |
-| CORS / allowed web origins (search the dashboard for "CORS") | `http://localhost:5173`, `https://workout-tracker-web-henna.vercel.app`     | [x]  |
-| Client ID Metadata Document (search "Client ID Metadata")    | Enabled (how Claude registers)                                              | [x]  |
-| Dynamic Client Registration (search "Dynamic Client")        | Enabled (older MCP clients)                                                 | [x]  |
-| Resource Indicators                                          | `https://workout-tracker-api-seven.vercel.app/mcp`, set as default          | [ ]  |
-| Sign-up                                                      | Restricted to you, or locked via `allowed_user_ids`                         | [ ]  |
+| Setting                                                   | Value                                                                                                              | Done |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---- |
+| Client ID                                                 | `client_01M82Z3D2JFVXBTRJ4T4EV21V7`                                                                                | [x]  |
+| AuthKit domain                                            | `https://constant-precision-53.authkit.app`                                                                        | [x]  |
+| Redirects → Redirect URI (local)                          | `http://localhost:5173/api/auth/callback`                                                                          | [ ]  |
+| Redirects → Redirect URI (production)                     | `https://workout-tracker-web-henna.vercel.app/api/auth/callback` (sign-in returns to the API, through the web app) | [ ]  |
+| Redirects → Initiate login URI                            | `https://workout-tracker-web-henna.vercel.app/login`                                                               | [ ]  |
+| Redirects → Sign-out redirect                             | `https://workout-tracker-web-henna.vercel.app` (sign-out fails without one)                                        | [ ]  |
+| CORS / allowed web origins                                | No longer needed: the browser doesn't call WorkOS directly since sign-in moved to the API                          | n/a  |
+| Client ID Metadata Document (search "Client ID Metadata") | Enabled (how Claude registers)                                                                                     | [x]  |
+| Dynamic Client Registration (search "Dynamic Client")     | Enabled (older MCP clients)                                                                                        | [x]  |
+| Resource Indicators                                       | `https://workout-tracker-api-seven.vercel.app/mcp`, set as default                                                 | [ ]  |
+| Sign-up                                                   | Restricted to you, or locked via `allowed_user_ids`                                                                | [ ]  |
 
 If Vercel assigned different URLs (the first apply prints `web_url`, `api_url` and
 `mcp_url`), use those here and in `infra/terraform.tfvars`.

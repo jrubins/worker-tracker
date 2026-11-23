@@ -141,6 +141,30 @@ variable "authkit_domain" {
   type        = string
 }
 
+variable "workos_api_key" {
+  description = "WorkOS API key (sk_...) for server-side sign-in. From the WORKOS_API_KEY Actions secret; never stored in state."
+  type        = string
+  sensitive   = true
+  ephemeral   = true
+
+  validation {
+    condition     = startswith(var.workos_api_key, "sk_")
+    error_message = "Set the WORKOS_API_KEY Actions secret to your WorkOS API key (sk_...)."
+  }
+}
+
+variable "workos_api_key_version" {
+  description = "Bump to send a rotated WORKOS_API_KEY to Vercel."
+  type        = number
+  default     = 1
+}
+
+variable "cookie_password_version" {
+  description = "Bump to generate a new session cookie password. Signs everyone out."
+  type        = number
+  default     = 1
+}
+
 variable "allowed_user_ids" {
   description = "WorkOS user IDs (user_...) allowed to use the app. Empty: anyone who can sign in."
   type        = list(string)

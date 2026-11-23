@@ -13,7 +13,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Production: a single button that redirects to WorkOS AuthKit. */
-export const AuthKit: Story = { args: { provider: 'authkit' } };
+export const WorkOS: Story = { args: { provider: 'workos' } };
 
 /** Development without WorkOS: sign in as any user ID. */
 export const DevSignIn: Story = {

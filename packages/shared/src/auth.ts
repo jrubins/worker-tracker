@@ -18,3 +18,26 @@ export const DevTokenResponseSchema = z.object({
   userId: z.string(),
 });
 export type DevTokenResponse = z.infer<typeof DevTokenResponseSchema>;
+
+/** The signed-in user, as the web app shows them. */
+export const SessionUserSchema = z.object({
+  id: z.string(),
+  email: z.string().nullable(),
+  name: z.string().nullable(),
+});
+export type SessionUser = z.infer<typeof SessionUserSchema>;
+
+/**
+ * GET /auth/session: who is signed in (from the session cookie), and how to sign in otherwise:
+ * 'workos' redirects to GET /auth/login; 'dev' posts a user ID to /auth/dev-session
+ * (development and tests only); 'none' means the API has no sign-in configured.
+ */
+export const SessionSchema = z.object({
+  user: SessionUserSchema.nullable(),
+  signIn: z.enum(['workos', 'dev', 'none']),
+});
+export type Session = z.infer<typeof SessionSchema>;
+
+/** POST /auth/logout: where to send the browser to finish signing out (WorkOS), if anywhere. */
+export const LogoutResponseSchema = z.object({ redirectUrl: z.string().nullable() });
+export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;

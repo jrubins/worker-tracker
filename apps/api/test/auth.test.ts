@@ -165,6 +165,9 @@ describe('production configuration', () => {
     NODE_ENV: 'production',
     DATABASE_URL: 'postgresql://user:pass@localhost:5432/app',
     WORKOS_CLIENT_ID: CLIENT_ID,
+    WORKOS_API_KEY: 'sk_test_example',
+    WORKOS_COOKIE_PASSWORD: 'c'.repeat(32),
+    WEB_URL: 'https://app.example.com',
     AUTHKIT_DOMAIN: AUTHKIT,
     MCP_RESOURCE_URL: MCP_URL,
   };
@@ -179,7 +182,16 @@ describe('production configuration', () => {
     );
   });
 
-  it('requires the WorkOS settings', () => {
-    expect(() => loadConfig({ ...production, AUTHKIT_DOMAIN: '' })).toThrow(/AUTHKIT_DOMAIN/);
+  it.each(['AUTHKIT_DOMAIN', 'WORKOS_API_KEY', 'WORKOS_COOKIE_PASSWORD', 'WEB_URL'])(
+    'requires %s',
+    (key) => {
+      expect(() => loadConfig({ ...production, [key]: '' })).toThrow(new RegExp(key));
+    },
+  );
+
+  it('refuses a short cookie password', () => {
+    expect(() => loadConfig({ ...production, WORKOS_COOKIE_PASSWORD: 'short' })).toThrow(
+      /WORKOS_COOKIE_PASSWORD/,
+    );
   });
 });
