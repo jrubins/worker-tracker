@@ -51,7 +51,7 @@ lints every file Claude edits.
 
 ```
 apps/
-  api/        Express API. src/ is the app; api/index.ts is the Vercel Function entry
+  api/        Express API. src/ is the app; src/vercel.ts is the Vercel Function entry
   web/        React SPA. src/routes (routing only) → src/pages (page components);
               src/features (feature UI and data hooks); src/components/ui is shadcn
 packages/
@@ -219,8 +219,10 @@ Create **two Vercel projects** from this repo:
 
 1. **Web:** Root Directory `apps/web`. Settings come from `apps/web/vercel.json`. Set
    `VITE_API_URL` (the API's URL), `VITE_WORKOS_CLIENT_ID` and the `VITE_SENTRY_*` variables.
-2. **API:** Root Directory `apps/api`. Settings come from `apps/api/vercel.json` (every path
-   goes to the Express app in `api/index.ts`). Set `DATABASE_URL` (Neon's **pooled**
+2. **API:** Root Directory `apps/api`. Settings come from `apps/api/vercel.json`: the build
+   (`scripts/build-vercel.ts`) copies `src/vercel.ts` and every file it can load, unchanged,
+   into a Build Output API function that serves every path. Nothing is compiled: Node 26 runs
+   the `.ts` sources directly, as in development. Set `DATABASE_URL` (Neon's **pooled**
    connection string), `CORS_ORIGINS` (the web URL), `WORKOS_CLIENT_ID`, `AUTHKIT_DOMAIN`,
    `MCP_RESOURCE_URL` (`<API URL>/mcp`), optionally `ALLOWED_USER_IDS`, and the `SENTRY_*`
    variables. Never set `AUTH_TEST_SECRET` there.

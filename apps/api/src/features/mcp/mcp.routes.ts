@@ -54,10 +54,15 @@ export function mcpMetadataRouter(
   let cached: { body: unknown; expires: number } | undefined;
   router.get('/.well-known/oauth-authorization-server', async (req, res) => {
     if (!cached || cached.expires < Date.now()) {
-      const upstream = await fetchMetadata(`${issuer}/.well-known/oauth-authorization-server`);
-      if (!upstream.ok) {
-        throw new HttpError(502, 'bad_gateway', 'Authorization server metadata is unavailable');
-      }
+      const unavailable = () =>
+        new HttpError(502, 'bad_gateway', 'Authorization server metadata is unavailable');
+      // A network failure (DNS, timeout) is the upstream's problem too: 502, not 500.
+      const upstream = await fetchMetadata(
+        `${issuer}/.well-known/oauth-authorization-server`,
+      ).catch((cause: unknown) => {
+        throw Object.assign(unavailable(), { cause });
+      });
+      if (!upstream.ok) throw unavailable();
       cached = { body: await upstream.json(), expires: Date.now() + METADATA_CACHE_MS };
     }
     res.json(cached.body);

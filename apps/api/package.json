@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "dotenvx run -q -f ../../.env --ignore=MISSING_ENV_FILE -- node --watch --watch-preserve-output src/server.ts",
     "start": "node src/server.ts",
-    "test": "dotenvx run -q -f ../../.env --ignore=MISSING_ENV_FILE -- vitest run"
+    "test": "dotenvx run -q -f ../../.env --ignore=MISSING_ENV_FILE -- vitest run",
+    "build": "node scripts/build-vercel.ts"
   },
   "dependencies": {
     "@app/db": "workspace:*",
@@ -32,6 +33,7 @@
     "@types/express": "5.0.6",
     "@types/node": "catalog:",
     "@types/supertest": "7.2.1",
+    "@vercel/nft": "1.11.11",
     "pino-pretty": "13.2.0",
     "supertest": "7.3.2",
     "vitest": "catalog:"

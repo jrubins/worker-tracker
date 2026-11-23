@@ -30,7 +30,7 @@ variable "production_branch" {
 variable "required_status_checks" {
   description = "CI job names that must pass before a pull request can merge."
   type        = list(string)
-  default     = ["check"]
+  default     = ["check", "zizmor"]
 }
 
 # --- Vercel ---

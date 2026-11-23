@@ -306,6 +306,9 @@ importers:
       '@types/supertest':
         specifier: 7.2.1
         version: 7.2.1
+      '@vercel/nft':
+        specifier: 1.11.11
+        version: 1.11.11
       pino-pretty:
         specifier: 13.2.0
         version: 13.2.0
