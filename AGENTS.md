@@ -26,6 +26,8 @@ A change is done when **`pnpm check` and `pnpm e2e` pass** and:
 - any change to `packages/db/src/contract.prisma` has an emitted contract and a planned migration
 - new environment variables are in `.env.example`, validated in config, and, if production
   needs them, set in `infra/vercel.tf`
+- anything that needs a manual step outside the repo (a dashboard setting, a new token or
+  secret) is recorded in `docs/manual-setup.md`, never with secret values
 
 ## Commands
 
@@ -66,6 +68,7 @@ apps/web/src/
 apps/e2e/tests/           Playwright end-to-end specs (fixtures.ts: unique(), capture())
 scripts/bootstrap.ts      one-step local setup
 infra/                    Terraform: Neon, Vercel, Sentry, GitHub (applied by GitHub Actions)
+docs/manual-setup.md      checklist of every step outside the code (dashboards, tokens)
 ```
 
 ## Verifying your change

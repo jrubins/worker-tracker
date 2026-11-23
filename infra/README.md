@@ -16,7 +16,7 @@ Everything the app runs on, as code. GitHub Actions runs it
 a _write-only_ value.
 
 **Not managed here:** WorkOS. Its Terraform provider can't configure AuthKit yet, so that stays
-a manual checklist (below). Cloudflare comes in when there's a custom domain.
+a manual checklist in [`docs/manual-setup.md`](../docs/manual-setup.md). Cloudflare comes in when there's a custom domain.
 
 ## What runs when
 
@@ -30,55 +30,15 @@ a manual checklist (below). Cloudflare comes in when there's a custom domain.
 Migrations and the Vercel deploy start at the same time. Keep migrations backward compatible,
 so the old code keeps working until the new code is live (add first, remove later).
 
-## One-time setup
+## One-time setup and manual steps
 
-Enter every token in the service's dashboard or in GitHub's secrets page. Never paste one into
-a chat or a file.
-
-1. **`main` branch.** Create `main` from the current default branch. Terraform then makes
-   `main` the default and protects it: changes need a pull request that passes CI (`check`).
-2. **HCP Terraform** (free): create an organization and a **CLI-driven** workspace (e.g.
-   `workout-tracker`). In the workspace's settings, set **Execution Mode → Local**. Then create
-   a user or team API token.
-3. **Vercel:** install the Vercel GitHub app on this repository. Then create an access token
-   (Account Settings → Tokens). On a team account, also set `vercel_team_id` in
-   `terraform.tfvars`.
-4. **Neon:** create an API key (Account settings → API keys). If you belong to several
-   organizations, set `neon_org_id`.
-5. **Sentry:** put your organization slug in `terraform.tfvars` (`sentry_organization`). Then
-   create a token (Settings → Developer Settings → Personal Tokens) with `org:read`,
-   `project:admin` and `team:admin`.
-   - **Optional source maps:** create an organization auth token (Settings → Auth Tokens) and
-     set `sentry_sourcemaps_token_version = 1`.
-6. **GitHub:** create a fine-grained personal access token for this repository only, with
-   **Administration: Read and write**. Metadata access comes with it.
-7. **Repository secrets** (Settings → Secrets and variables → Actions):
-   - Secrets: `TF_API_TOKEN`, `VERCEL_API_TOKEN`, `NEON_API_KEY`, `SENTRY_AUTH_TOKEN`,
-     `INFRA_GITHUB_TOKEN`, and optionally `SENTRY_SOURCEMAPS_TOKEN`.
-   - Variables: `TF_CLOUD_ORGANIZATION` and `TF_WORKSPACE`.
-8. **First apply:** run the **Infrastructure** workflow (Actions → Run workflow, on `main`).
-   It creates everything and migrates the new database. Then redeploy both Vercel projects
-   once, or push a commit, because they were created after the last push.
+Accounts, tokens and WorkOS settings are tracked as a checklist in
+[`docs/manual-setup.md`](../docs/manual-setup.md), with links, required scopes and expiry
+dates. Update that file whenever a manual step is done or changes.
 
 Vercel names the projects `<project_name>-web` and `<project_name>-api`. If one of the default
 `*.vercel.app` URLs is already taken, Vercel assigns another one. In that case, set `web_url`
 and `api_url` in `terraform.tfvars` to the URLs Vercel shows.
-
-## WorkOS checklist (manual)
-
-In the WorkOS dashboard, using the `web_url` and `mcp_url` outputs:
-
-1. **Redirects:** add the web URL as a Redirect URI, and `<web URL>/login` as the Initiate
-   login URI.
-2. **Authentication → allowed origins:** add the web URL.
-3. **Connect → Configuration:** enable **Client ID Metadata Document** and **Dynamic Client
-   Registration**.
-4. **Resource Indicators:** add the MCP URL and make it the default.
-5. After your first sign-in, copy your user ID (`user_...`) into `allowed_user_ids` in
-   `terraform.tfvars`, and merge that change. The app then accepts only you.
-
-Then connect Claude: in claude.ai, go to **Settings → Connectors → Add custom connector** and
-enter the MCP URL.
 
 ## Running locally (optional)
 
