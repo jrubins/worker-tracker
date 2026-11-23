@@ -1,9 +1,10 @@
 name: CI
 
+# Pull requests only: main changes only through pull requests that pass this workflow
+# (see the ruleset in infra/github.tf), so running it again after a merge repeats the work.
 on:
-  push:
-    branches: [main]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -13,7 +14,38 @@ permissions:
   contents: read
 
 jobs:
+  # Decides whether the pull request touches anything the checks cover. Changes only to
+  # docs, Markdown, infra/ or the Infrastructure workflow skip `check`; a job skipped this
+  # way still counts as passed for the ruleset's required check (a skipped workflow wouldn't).
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed="$(git diff --name-only "origin/$BASE_REF...HEAD")"
+          echo "$changed"
+          if echo "$changed" | grep -qvE '^(docs/|infra/|\.github/workflows/infra\.yml$)|\.md$'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
   check:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

@@ -38,7 +38,7 @@ tokens. Terraform (`infra/`) handles everything else.
       ([Actions variables](https://github.com/jrubins/worker-tracker/settings/variables/actions)):
       `TF_STATE_BUCKET` = `terraform-state`, `CLOUDFLARE_ACCOUNT_ID` = your Cloudflare
       account ID.
-- [ ] **First apply**: [Actions → Infrastructure](https://github.com/jrubins/worker-tracker/actions/workflows/infra.yml)
+- [x] **First apply**: [Actions → Infrastructure](https://github.com/jrubins/worker-tracker/actions/workflows/infra.yml)
       → **Run workflow** on `main`. Then redeploy both Vercel projects once.
 - [ ] **WorkOS production settings** (section 3).
 - [ ] **Claude connector**: in [claude.ai Settings → Connectors](https://claude.ai/settings/connectors),
@@ -74,31 +74,31 @@ WorkOS has no Terraform support for these settings yet, so they're set in the
 [dashboard](https://dashboard.workos.com) and recorded here. The client ID and AuthKit domain
 aren't secrets. They're also in `infra/terraform.tfvars`.
 
-| Setting                                               | Value                                                             | Done |
-| ----------------------------------------------------- | ----------------------------------------------------------------- | ---- |
-| Client ID                                             | `client_01M82Z3D2JFVXBTRJ4T4EV21V7`                               | [x]  |
-| AuthKit domain                                        | `https://constant-precision-53.authkit.app`                       | [x]  |
-| Redirects → Redirect URI (local)                      | `http://localhost:5173`                                           | [ ]  |
-| Redirects → Redirect URI (production)                 | `https://workout-tracker-web.vercel.app`                          | [ ]  |
-| Redirects → Initiate login URI                        | `https://workout-tracker-web.vercel.app/login`                    | [ ]  |
-| Authentication → allowed origins                      | `http://localhost:5173`, `https://workout-tracker-web.vercel.app` | [ ]  |
-| Connect → Configuration → Client ID Metadata Document | Enabled (how Claude registers)                                    | [ ]  |
-| Connect → Configuration → Dynamic Client Registration | Enabled (older MCP clients)                                       | [ ]  |
-| Resource Indicators                                   | `https://workout-tracker-api.vercel.app/mcp`, set as default      | [ ]  |
-| Sign-up                                               | Restricted to you, or locked via `allowed_user_ids`               | [ ]  |
+| Setting                                               | Value                                                                   | Done |
+| ----------------------------------------------------- | ----------------------------------------------------------------------- | ---- |
+| Client ID                                             | `client_01M82Z3D2JFVXBTRJ4T4EV21V7`                                     | [x]  |
+| AuthKit domain                                        | `https://constant-precision-53.authkit.app`                             | [x]  |
+| Redirects → Redirect URI (local)                      | `http://localhost:5173`                                                 | [ ]  |
+| Redirects → Redirect URI (production)                 | `https://workout-tracker-web-henna.vercel.app`                          | [ ]  |
+| Redirects → Initiate login URI                        | `https://workout-tracker-web-henna.vercel.app/login`                    | [ ]  |
+| Authentication → allowed origins                      | `http://localhost:5173`, `https://workout-tracker-web-henna.vercel.app` | [ ]  |
+| Connect → Configuration → Client ID Metadata Document | Enabled (how Claude registers)                                          | [ ]  |
+| Connect → Configuration → Dynamic Client Registration | Enabled (older MCP clients)                                             | [ ]  |
+| Resource Indicators                                   | `https://workout-tracker-api-seven.vercel.app/mcp`, set as default      | [ ]  |
+| Sign-up                                               | Restricted to you, or locked via `allowed_user_ids`                     | [ ]  |
 
 If Vercel assigned different URLs (the first apply prints `web_url`, `api_url` and
 `mcp_url`), use those here and in `infra/terraform.tfvars`.
 
 ## 4. Live URLs
 
-Fill these in after the first apply.
+Set up by the first apply on 2026-11-23.
 
-| What                   | URL                            |
-| ---------------------- | ------------------------------ |
-| Web app                |                                |
-| API                    |                                |
-| MCP (Claude connector) |                                |
-| Neon project           |                                |
-| Sentry projects        |                                |
-| Terraform state        | `terraform-state` bucket in R2 |
+| What                   | URL                                                                      |
+| ---------------------- | ------------------------------------------------------------------------ |
+| Web app                | https://workout-tracker-web-henna.vercel.app                             |
+| API                    | https://workout-tracker-api-seven.vercel.app                             |
+| MCP (Claude connector) | https://workout-tracker-api-seven.vercel.app/mcp                         |
+| Neon project           | `workout-tracker` in organization `org-dawn-boat-78015684`               |
+| Sentry projects        | `workout-tracker-api` and `workout-tracker-web` in organization `jonbox` |
+| Terraform state        | `terraform-state` bucket in R2                                           |
