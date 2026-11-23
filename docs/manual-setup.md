@@ -27,13 +27,13 @@ tokens. Terraform (`infra/`) handles everything else.
       Terraform adopts them on the first apply
       (`infra/imports.tf`): `workout-tracker-web` (`prj_1lKllFNuMm5X7Ot7WO0wE9tvwuur`) and
       `workout-tracker-api` (`prj_r7PvaUIcIte5YWjrAqQcbophNGVp`).
-- [ ] **Neon**: [sign up](https://console.neon.tech/signup). Terraform creates the project.
+- [x] **Neon**: [sign up](https://console.neon.tech/signup). Terraform creates the project.
 - [x] **Sentry**: [sign up](https://sentry.io/signup/), then copy the **Organization Slug** from
       [Settings → General Settings](https://sentry.io/settings/) into `sentry_organization` in
       `infra/terraform.tfvars` (done: `jonbox`).
-- [ ] **Credentials**: create each one in section 2 and save it as a
+- [x] **Credentials**: create each one in section 2 and save it as a
       [repository secret](https://github.com/jrubins/worker-tracker/settings/secrets/actions).
-- [ ] **Repository variables**
+- [x] **Repository variables**
       ([Actions variables](https://github.com/jrubins/worker-tracker/settings/variables/actions)):
       `TF_STATE_BUCKET` = `terraform-state`, `CLOUDFLARE_ACCOUNT_ID` = your Cloudflare
       account ID.
