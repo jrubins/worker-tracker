@@ -41,7 +41,7 @@ tokens. Terraform (`infra/`) handles everything else.
 - [x] **First apply**: [Actions → Infrastructure](https://github.com/jrubins/worker-tracker/actions/workflows/infra.yml)
       → **Run workflow** on `main`. Then redeploy both Vercel projects once.
 - [ ] **WorkOS production settings** (section 3).
-- [ ] **Claude connector**: in [claude.ai Settings → Connectors](https://claude.ai/settings/connectors),
+- [x] **Claude connector**: in [claude.ai Settings → Connectors](https://claude.ai/settings/connectors),
       add a custom connector with the MCP URL (section 4). Sign in once.
 - [x] **Lock the app to you**: copy your WorkOS user ID (`user_...`, under Users in the WorkOS
       dashboard) into `allowed_user_ids` in `infra/terraform.tfvars`, then merge. Done: `user_01M845RVAKQ11513318SG3YAK2`.
@@ -83,9 +83,9 @@ search box is the quickest way to find each setting.
 | Client ID                                                 | `client_01M82Z3D2JFVXBTRJ4T4EV21V7`                                                                                | [x]  |
 | AuthKit domain                                            | `https://constant-precision-53.authkit.app`                                                                        | [x]  |
 | Redirects → Redirect URI (local)                          | `http://localhost:5173/api/auth/callback`                                                                          | [ ]  |
-| Redirects → Redirect URI (production)                     | `https://workout-tracker-web-henna.vercel.app/api/auth/callback` (sign-in returns to the API, through the web app) | [ ]  |
+| Redirects → Redirect URI (production)                     | `https://workout-tracker-web-henna.vercel.app/api/auth/callback` (sign-in returns to the API, through the web app) | [x]  |
 | Redirects → Initiate login URI                            | `https://workout-tracker-web-henna.vercel.app/login`                                                               | [ ]  |
-| Redirects → Sign-out redirect                             | `https://workout-tracker-web-henna.vercel.app` (sign-out fails without one)                                        | [ ]  |
+| Redirects → Sign-out redirect                             | `https://workout-tracker-web-henna.vercel.app` (sign-out fails without one)                                        | [x]  |
 | CORS / allowed web origins                                | No longer needed: the browser doesn't call WorkOS directly since sign-in moved to the API                          | n/a  |
 | Client ID Metadata Document (search "Client ID Metadata") | Enabled (how Claude registers)                                                                                     | [x]  |
 | Dynamic Client Registration (search "Dynamic Client")     | Enabled (older MCP clients)                                                                                        | [x]  |
@@ -97,7 +97,8 @@ If Vercel assigned different URLs (the first apply prints `web_url`, `api_url` a
 
 ## 4. Live URLs
 
-Set up by the first apply on 2026-11-23.
+Set up by the first apply on 2026-11-23. Web sign-in through WorkOS, with the session kept
+across reloads, confirmed working on 2026-11-23.
 
 | What                   | URL                                                                      |
 | ---------------------- | ------------------------------------------------------------------------ |
