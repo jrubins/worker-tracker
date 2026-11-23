@@ -10,5 +10,5 @@ api_url          = "https://workout-tracker-api-seven.vercel.app"
 app_timezone     = "America/Chicago"
 workos_client_id = "client_01M82Z3D2JFVXBTRJ4T4EV21V7"
 authkit_domain   = "https://constant-precision-53.authkit.app"
-# After your first sign-in, add your WorkOS user ID to lock the app to you:
-allowed_user_ids = []
+# Only these WorkOS users can use the app (others get 403):
+allowed_user_ids = ["user_01M845RVAKQ11513318SG3YAK2"]
