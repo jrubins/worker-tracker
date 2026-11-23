@@ -43,8 +43,8 @@ tokens. Terraform (`infra/`) handles everything else.
 - [ ] **WorkOS production settings** (section 3).
 - [ ] **Claude connector**: in [claude.ai Settings → Connectors](https://claude.ai/settings/connectors),
       add a custom connector with the MCP URL (section 4). Sign in once.
-- [ ] **Lock the app to you**: copy your WorkOS user ID (`user_...`, under Users in the WorkOS
-      dashboard) into `allowed_user_ids` in `infra/terraform.tfvars`, then merge.
+- [x] **Lock the app to you**: copy your WorkOS user ID (`user_...`, under Users in the WorkOS
+      dashboard) into `allowed_user_ids` in `infra/terraform.tfvars`, then merge. Done: `user_01M845RVAKQ11513318SG3YAK2`.
 
 ## 2. Credentials
 
