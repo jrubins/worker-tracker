@@ -1,10 +1,12 @@
 import type { ProgressPoint } from '@app/shared';
-import { defineChart, lineY } from '@tanstack/charts';
+import { areaY, defineChart, lineY } from '@tanstack/charts';
 import { Chart } from '@tanstack/charts/react';
 import { scaleLinear } from '@tanstack/charts/scales/linear';
 import { scalePoint } from '@tanstack/charts/scales/point';
 import { tooltip } from '@tanstack/charts/tooltip';
+import { TrendingUp } from 'lucide-react';
 import { useMemo } from 'react';
+import { EmptyState } from '@/components/empty-state';
 import { formatShortDate } from '@/lib/format';
 
 /** Best estimated one-rep max per session. */
@@ -23,20 +25,31 @@ export function ProgressChart({ points }: { points: readonly ProgressPoint[] }) 
     const max = Math.ceil((Math.max(...values) * 1.05) / 5) * 5;
     return defineChart({
       marks: [
+        areaY(rows, {
+          x: 'session',
+          y: 'e1rm',
+          y1: min,
+          fill: 'var(--chart-1)',
+          fillOpacity: 0.12,
+        }),
         lineY(rows, {
           id: 'e1rm',
           x: 'session',
           y: 'e1rm',
           points: true,
           stroke: 'var(--chart-1)',
+          strokeWidth: 2.5,
         }),
       ],
       scales: {
-        x: { scale: () => scalePoint<string>().padding(0.3), axis: { label: 'Session' } },
+        x: {
+          scale: () => scalePoint<string>().padding(0.3),
+          axis: { ticks: { line: false } },
+        },
         y: {
           scale: scaleLinear().domain([min, max]),
-          grid: true,
-          axis: { label: 'Est. 1RM (lb)' },
+          grid: { stroke: 'var(--chart-grid)' },
+          axis: { line: false, ticks: { line: false, count: 4 } },
         },
       },
       tooltip,
@@ -45,9 +58,9 @@ export function ProgressChart({ points }: { points: readonly ProgressPoint[] }) 
 
   if (rows.length < 2) {
     return (
-      <p className="text-muted-foreground text-sm">
+      <EmptyState icon={<TrendingUp />} title="Not enough sessions yet.">
         The chart appears after two sessions with weighted working sets.
-      </p>
+      </EmptyState>
     );
   }
   return (
@@ -55,7 +68,7 @@ export function ProgressChart({ points }: { points: readonly ProgressPoint[] }) 
       <Chart
         definition={definition}
         height={240}
-        initialWidth={640}
+        initialWidth={560}
         ariaLabel="Estimated one-rep max per session"
       />
     </div>

@@ -1,5 +1,8 @@
 import type { UpdateSet, WorkoutSet } from '@app/shared';
 import { Link } from '@tanstack/react-router';
+import { ListX } from 'lucide-react';
+import { EmptyState } from '@/components/empty-state';
+import { formatNumber } from '@/lib/format';
 import { SetEditor } from './set-editor';
 
 interface ExerciseSetsProps {
@@ -17,34 +20,54 @@ export function ExerciseSets({ sets, onSaveSet, onDeleteSet }: ExerciseSetsProps
     else groups.push({ exerciseId: set.exerciseId, exerciseName: set.exerciseName, sets: [set] });
   }
 
-  if (groups.length === 0) return <p className="text-muted-foreground text-sm">No sets logged.</p>;
+  if (groups.length === 0) return <EmptyState icon={<ListX />} title="No sets logged." />;
 
   return (
-    <div className="space-y-6">
-      {groups.map((group) => (
-        <section key={`${group.exerciseId}-${group.sets[0]?.id}`} aria-label={group.exerciseName}>
-          <h2 className="mb-1 font-medium">
-            <Link
-              to="/exercises/$exerciseId"
-              params={{ exerciseId: String(group.exerciseId) }}
-              className="hover:underline"
-            >
-              {group.exerciseName}
-            </Link>
-          </h2>
-          <div className="divide-y">
-            {group.sets.map((set, index) => (
-              <SetEditor
-                key={set.id}
-                set={set}
-                number={index + 1}
-                onSave={(changes) => onSaveSet(set.id, changes)}
-                onDelete={() => onDeleteSet(set.id)}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
+    <div className="space-y-4">
+      {groups.map((group, index) => {
+        const working = group.sets.filter((set) => !set.warmup);
+        const best = Math.max(0, ...working.map((set) => set.e1rmLb ?? 0));
+        return (
+          <section
+            key={`${group.exerciseId}-${group.sets[0]?.id}`}
+            aria-label={group.exerciseName}
+            className="bg-card rounded-xl border"
+          >
+            <header className="flex items-center gap-3 border-b px-4 py-3">
+              <span
+                aria-hidden
+                className="bg-primary text-primary-foreground font-display flex size-7 shrink-0 items-center justify-center rounded-md text-sm font-semibold"
+              >
+                {index + 1}
+              </span>
+              <h2 className="min-w-0 flex-1 truncate font-semibold">
+                <Link
+                  to="/exercises/$exerciseId"
+                  params={{ exerciseId: String(group.exerciseId) }}
+                  className="hover:text-primary hover:underline"
+                >
+                  {group.exerciseName}
+                </Link>
+              </h2>
+              <span className="text-muted-foreground text-xs">
+                {working.length} working {working.length === 1 ? 'set' : 'sets'}
+                {best > 0 ? ` · best e1RM ${formatNumber(best)} lb` : ''}
+              </span>
+            </header>
+            <div className="divide-y px-4">
+              {group.sets.map((set, setIndex) => (
+                <SetEditor
+                  key={set.id}
+                  set={set}
+                  number={setIndex + 1}
+                  onSave={(changes) => onSaveSet(set.id, changes)}
+                  onDelete={() => onDeleteSet(set.id)}
+                />
+              ))}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

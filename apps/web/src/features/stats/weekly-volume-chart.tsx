@@ -4,32 +4,48 @@ import { Chart } from '@tanstack/charts/react';
 import { scaleBand } from '@tanstack/charts/scales/band';
 import { scaleLinear } from '@tanstack/charts/scales/linear';
 import { tooltip } from '@tanstack/charts/tooltip';
+import { ChartColumn } from 'lucide-react';
 import { useMemo } from 'react';
-import { formatShortDate } from '@/lib/format';
+import { EmptyState } from '@/components/empty-state';
+import { formatCompact, formatShortDate } from '@/lib/format';
 
-/** Working volume (lb) per week, oldest first. */
+/** Working volume (lb) per week, oldest first; the current (last) week is highlighted. */
 export function WeeklyVolumeChart({ weeks }: { weeks: readonly WeekSummary[] }) {
   const rows = useMemo(
-    () => weeks.map((week) => ({ week: formatShortDate(week.weekStart), volume: week.volumeLb })),
+    () =>
+      weeks.map((week, index) => ({
+        week: formatShortDate(week.weekStart),
+        volume: week.volumeLb,
+        current: index === weeks.length - 1,
+      })),
     [weeks],
   );
   const definition = useMemo(() => {
     const max = Math.max(1, ...rows.map((row) => row.volume));
     return defineChart({
-      marks: [barY(rows, { x: 'week', y: 'volume', inset: 2, fill: 'var(--chart-1)' })],
+      marks: [
+        barY(rows, {
+          x: 'week',
+          y: 'volume',
+          inset: 3,
+          maxThickness: 44,
+          radius: { end: 6 },
+          fill: (row) => (row.current ? 'var(--chart-1)' : 'var(--chart-muted)'),
+        }),
+      ],
       scales: {
         x: {
           scale: () =>
             scaleBand<string>()
               .domain(rows.map((row) => row.week))
-              .padding(0.2),
-          axis: { label: 'Week of' },
+              .padding(0.25),
+          axis: { ticks: { line: false } },
         },
         y: {
           scale: scaleLinear().domain([0, max]),
           nice: true,
-          grid: true,
-          axis: { label: 'Volume (lb)' },
+          grid: { stroke: 'var(--chart-grid)' },
+          axis: { line: false, ticks: { line: false, count: 4, format: formatCompact } },
         },
       },
       tooltip,
@@ -37,11 +53,15 @@ export function WeeklyVolumeChart({ weeks }: { weeks: readonly WeekSummary[] }) 
   }, [rows]);
 
   if (rows.every((row) => row.volume === 0)) {
-    return <p className="text-muted-foreground text-sm">No training logged in these weeks yet.</p>;
+    return (
+      <EmptyState icon={<ChartColumn />} title="No training logged in these weeks yet.">
+        Ask Claude to log a workout and your weekly volume shows up here.
+      </EmptyState>
+    );
   }
   return (
     <div className="text-muted-foreground">
-      <Chart definition={definition} height={220} initialWidth={640} ariaLabel="Weekly volume" />
+      <Chart definition={definition} height={220} initialWidth={560} ariaLabel="Weekly volume" />
     </div>
   );
 }

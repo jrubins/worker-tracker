@@ -5,7 +5,12 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/oswald';
 import '../src/index.css';
+
+// Stories render in the app's default dark theme.
+document.documentElement.classList.add('dark');
 
 /**
  * Renders each story inside an in-memory TanStack Router, so components with `<Link>` work in

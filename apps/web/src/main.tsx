@@ -7,6 +7,8 @@ import { AuthProvider } from './components/auth-provider';
 import { SessionGate } from './components/session-gate';
 import { initSentry } from './lib/sentry';
 import { queryClient, router } from './router';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/oswald';
 import './index.css';
 
 initSentry(router);

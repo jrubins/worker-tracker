@@ -14,23 +14,28 @@ const target = (e: RoutineVersion['exercises'][number]) =>
 /** The exercises and targets of one routine version. */
 export function RoutinePlan({ version }: { version: RoutineVersion }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {version.notes ? <p className="text-muted-foreground text-sm">{version.notes}</p> : null}
-      <ol className="list-decimal space-y-1 pl-5">
-        {version.exercises.map((e) => (
-          <li key={`${e.exerciseId}-${e.position}`}>
-            <Link
-              to="/exercises/$exerciseId"
-              params={{ exerciseId: String(e.exerciseId) }}
-              className="hover:underline"
-            >
-              {e.exerciseName}
-            </Link>
+      <ol className="divide-y">
+        {version.exercises.map((e, index) => (
+          <li key={`${e.exerciseId}-${e.position}`} className="flex items-start gap-3 py-2.5">
+            <span className="text-muted-foreground font-display w-5 pt-0.5 text-sm font-semibold">
+              {index + 1}
+            </span>
+            <div className="min-w-0 flex-1">
+              <Link
+                to="/exercises/$exerciseId"
+                params={{ exerciseId: String(e.exerciseId) }}
+                className="font-medium hover:underline"
+              >
+                {e.exerciseName}
+              </Link>
+              {e.notes ? <p className="text-muted-foreground text-xs">{e.notes}</p> : null}
+            </div>
             {target(e) ? (
-              <span className="text-muted-foreground ml-2 text-sm">{target(e)}</span>
-            ) : null}
-            {e.notes ? (
-              <span className="text-muted-foreground ml-2 text-sm">({e.notes})</span>
+              <span className="bg-secondary rounded-md px-2 py-0.5 text-xs font-semibold whitespace-nowrap tabular-nums">
+                {target(e)}
+              </span>
             ) : null}
           </li>
         ))}

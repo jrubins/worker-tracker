@@ -2,6 +2,7 @@ import type { UpdateSet, WorkoutSet } from '@app/shared';
 import { useForm } from '@tanstack/react-form';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { cn } from 'cn';
 import { z } from 'zod';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,40 +54,46 @@ export function SetEditor({ set, number, onSave, onDelete }: SetEditorProps) {
 
   if (!editing) {
     return (
-      <div className="flex items-center gap-3 py-1.5">
-        <span className="text-muted-foreground w-6 text-sm">{number}</span>
-        <span className="flex-1">
-          {formatSet(set)}
+      <div className="flex items-center gap-3 py-2">
+        <span className="text-muted-foreground w-5 text-center text-xs font-semibold tabular-nums">
+          {number}
+        </span>
+        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+          <span className={cn('font-medium tabular-nums', set.warmup && 'text-muted-foreground')}>
+            {formatSet(set)}
+          </span>
           {set.warmup ? (
-            <Badge variant="outline" className="ml-2">
+            <Badge variant="outline" className="text-muted-foreground">
               Warm-up
             </Badge>
           ) : null}
-          {set.notes ? (
-            <span className="text-muted-foreground ml-2 text-sm">{set.notes}</span>
-          ) : null}
+          {set.notes ? <span className="text-muted-foreground text-sm">{set.notes}</span> : null}
         </span>
         {set.e1rmLb === null ? null : (
-          <span className="text-muted-foreground hidden text-xs sm:inline">
+          <span className="text-muted-foreground hidden text-xs tabular-nums sm:inline">
             e1RM {formatNumber(set.e1rmLb)}
           </span>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={`Edit set ${number}`}
-          onClick={() => setEditing(true)}
-        >
-          <Pencil />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={`Delete set ${number}`}
-          onClick={() => void onDelete()}
-        >
-          <Trash2 />
-        </Button>
+        <span className="flex">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground size-8"
+            aria-label={`Edit set ${number}`}
+            onClick={() => setEditing(true)}
+          >
+            <Pencil />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-destructive size-8"
+            aria-label={`Delete set ${number}`}
+            onClick={() => void onDelete()}
+          >
+            <Trash2 />
+          </Button>
+        </span>
       </div>
     );
   }
@@ -136,6 +143,7 @@ export function SetEditor({ set, number, onSave, onDelete }: SetEditorProps) {
           <label className="flex items-center gap-2 pb-2 text-sm">
             <input
               type="checkbox"
+              className="accent-primary size-4"
               checked={f.state.value}
               onChange={(event) => f.handleChange(event.target.checked)}
             />

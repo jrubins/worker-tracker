@@ -20,9 +20,10 @@ test.describe('signed out', () => {
 
 test('signs out', async ({ page, user }) => {
   await page.goto('/');
-  await expect(page.getByText(user.userId)).toBeVisible();
+  await page.getByRole('button', { name: 'Account menu' }).click();
+  await expect(page.getByRole('menu').getByText(user.userId)).toBeVisible();
 
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await page.getByRole('menuitem', { name: 'Sign out' }).click();
 
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
 });
