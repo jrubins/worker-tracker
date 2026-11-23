@@ -19,6 +19,7 @@
     "@modelcontextprotocol/server": "2.4.0",
     "@sentry/node": "11.16.0",
     "@vercel/functions": "3.11.3",
+    "@workos-inc/node": "12.4.0",
     "cors": "2.8.6",
     "express": "5.3.0",
     "helmet": "8.3.0",

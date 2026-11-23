@@ -19,8 +19,8 @@ interface Fixtures {
   capture: (name: string) => Promise<void>;
 }
 
-/** Must match DEV_SESSION_KEY in apps/web/src/components/auth-provider.tsx. */
-const DEV_SESSION_KEY = 'app.devSession';
+/** Must match DEV_SESSION_COOKIE in apps/api/src/auth/web-sessions.ts. */
+const DEV_SESSION_COOKIE = 'wt_dev_session';
 
 /**
  * - Every test fails if the page logs a console error or throws, so silent breakage can't pass.
@@ -46,12 +46,12 @@ export const test = base.extend<Fixtures & Options>({
     await http.dispose();
   },
 
-  page: async ({ page, signedIn, user }, use) => {
+  page: async ({ page, signedIn, user, baseURL }, use) => {
     if (signedIn) {
-      await page.addInitScript(([key, value]) => window.localStorage.setItem(key, value), [
-        DEV_SESSION_KEY,
-        JSON.stringify(user),
-      ] as const);
+      // The same session cookie the API's dev sign-in sets (the web app reaches the API at /api).
+      await page
+        .context()
+        .addCookies([{ name: DEV_SESSION_COOKIE, value: user.token, url: baseURL ?? '' }]);
     }
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(`page error: ${error.message}`));

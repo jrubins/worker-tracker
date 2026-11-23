@@ -11,6 +11,13 @@ import { defineConfig } from 'vitest/config';
 // build environment), then deleted so they are never served publicly.
 const sentryAuthToken = process.env['SENTRY_AUTH_TOKEN'];
 
+// Local API for the /api proxy: API_PROXY_TARGET (end-to-end tests use their own port).
+const apiProxy = {
+  target: process.env['API_PROXY_TARGET'] ?? 'http://localhost:3000',
+  changeOrigin: true,
+  rewrite: (path: string) => path.replace(/^\/api/, ''),
+};
+
 export default defineConfig({
   plugins: [
     // Must come before react(): generates src/routeTree.gen.ts from src/routes.
@@ -30,6 +37,10 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  // The browser calls the API at /api on the web app's own origin, so the session cookie is
+  // first-party (production does the same with a Vercel rewrite; see vercel.json).
+  server: { proxy: { '/api': apiProxy } },
+  preview: { proxy: { '/api': apiProxy } },
   build: {
     sourcemap: sentryAuthToken ? 'hidden' : false,
     rolldownOptions: {

@@ -269,6 +269,9 @@ importers:
       '@vercel/functions':
         specifier: 3.11.3
         version: 3.11.3(ws@8.23.0)
+      '@workos-inc/node':
+        specifier: 12.4.0
+        version: 12.4.0
       cors:
         specifier: 2.8.6
         version: 2.8.6
@@ -357,9 +360,6 @@ importers:
       '@tanstack/react-router':
         specifier: 1.170.46
         version: 1.170.46(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      '@workos-inc/authkit-react':
-        specifier: 0.16.3
-        version: 0.16.3(react@19.3.1)
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1
@@ -3337,13 +3337,9 @@ packages:
   '@webcontainer/env@1.1.1':
     resolution: {integrity: sha512-6aN99yL695Hi9SuIk1oC88l9o0gmxL1nGWWQ/kNy81HigJ0FoaoTXpytCj6ItzgyCEwA9kF1wixsTuv5cjsgng==}
 
-  '@workos-inc/authkit-js@0.20.5':
-    resolution: {integrity: sha512-5e3C0xTMMlnDlaVAIOCk/G91W83lpb9ChPolCxTOQCkCuwn3w5qfuJze+5UNOIX1RRZv6rnzyb2FRfPdSThDkw==}
-
-  '@workos-inc/authkit-react@0.16.3':
-    resolution: {integrity: sha512-0dBvUp/ZEF/yrojfDHK9T/eMmNxMtH7HbWZvA8Aum5wRn874Yr0wraAFr/wAKBRJYoYLCcfYwSEDlYTjKTk2sQ==}
-    peerDependencies:
-      react: '>=17'
+  '@workos-inc/node@12.4.0':
+    resolution: {integrity: sha512-bFpXWRTc4HR3uRaaB1mZiq5tl7aR4MVaao45b4GxEfgK8aLEjHI01oPStn7AjW7iQt8S6vSO2igFBF/MkPhyRg==}
+    engines: {node: '>=22.11.0'}
 
   abbrev@3.0.1:
     resolution: {integrity: sha512-AO2ac6pjRB3SJmGJo+v5/aK6Omggp6fsLrs6wN9bd35ulu4cCwaAU9+7ZhXjeqHVkaHThLuzH0nZr0YpCDhygg==}
@@ -8637,12 +8633,7 @@ snapshots:
 
   '@webcontainer/env@1.1.1': {}
 
-  '@workos-inc/authkit-js@0.20.5': {}
-
-  '@workos-inc/authkit-react@0.16.3(react@19.3.1)':
-    dependencies:
-      '@workos-inc/authkit-js': 0.20.5
-      react: 19.3.1
+  '@workos-inc/node@12.4.0': {}
 
   abbrev@3.0.1: {}
 

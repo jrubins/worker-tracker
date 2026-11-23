@@ -33,6 +33,10 @@ terraform {
       source  = "jianyuan/sentry"
       version = "0.17.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.9.1"
+    }
     github = {
       source  = "integrations/github"
       version = "6.13.0"

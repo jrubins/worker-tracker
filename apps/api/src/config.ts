@@ -38,6 +38,19 @@ const EnvSchema = z
     // --- Auth (WorkOS AuthKit) ---------------------------------------------------------
     /** WorkOS client ID (client_...): verifies the web app's session tokens. */
     WORKOS_CLIENT_ID: z.preprocess(emptyToUndefined, z.string().startsWith('client_').optional()),
+    /**
+     * WorkOS API key (sk_...): the API exchanges sign-in codes and refreshes sessions with it.
+     * Server-only, never sent to the browser.
+     */
+    WORKOS_API_KEY: z.preprocess(emptyToUndefined, z.string().startsWith('sk_').optional()),
+    /** Encrypts the session cookie. At least 32 characters; changing it signs everyone out. */
+    WORKOS_COOKIE_PASSWORD: z.preprocess(emptyToUndefined, z.string().min(32).optional()),
+    /**
+     * Public URL of the web app. The browser reaches the API through it at /api (a Vercel
+     * rewrite in production, Vite's proxy in development), so the session cookie is
+     * first-party. Sign-in returns to <WEB_URL>/api/auth/callback.
+     */
+    WEB_URL: z.preprocess(emptyToUndefined, z.url().optional()),
     /** AuthKit domain, e.g. https://your-app.authkit.app: issues MCP clients' tokens. */
     AUTHKIT_DOMAIN: z.preprocess(emptyToUndefined, z.url().optional()),
     /**
@@ -73,7 +86,14 @@ const EnvSchema = z
         message: 'must not be set in production (it allows signing in as any user)',
       });
     }
-    for (const key of ['WORKOS_CLIENT_ID', 'AUTHKIT_DOMAIN', 'MCP_RESOURCE_URL'] as const) {
+    for (const key of [
+      'WORKOS_CLIENT_ID',
+      'WORKOS_API_KEY',
+      'WORKOS_COOKIE_PASSWORD',
+      'WEB_URL',
+      'AUTHKIT_DOMAIN',
+      'MCP_RESOURCE_URL',
+    ] as const) {
       if (!env[key]) {
         ctx.addIssue({ code: 'custom', path: [key], message: 'is required in production' });
       }
@@ -82,6 +102,7 @@ const EnvSchema = z
   .transform((env) => ({
     ...env,
     MCP_RESOURCE_URL: env.MCP_RESOURCE_URL ?? `http://localhost:${env.PORT}/mcp`,
+    WEB_URL: (env.WEB_URL ?? 'http://localhost:5173').replace(/\/$/, ''),
   }));
 
 export type Config = z.infer<typeof EnvSchema>;

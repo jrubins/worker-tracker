@@ -4,6 +4,7 @@ import type { Express } from 'express';
 import request from 'supertest';
 import { pino } from 'pino';
 import { createApp } from '../src/app.ts';
+import type { WorkosSessions } from '../src/auth/workos-sessions.ts';
 import { signTestToken } from '../src/auth/tokens.ts';
 import { loadConfig } from '../src/config.ts';
 
@@ -13,9 +14,13 @@ export const TEST_SECRET =
 
 /**
  * Builds a real app wired to the test database, with logging silenced and test tokens
- * accepted. Pass env overrides to test configuration-dependent behaviour.
+ * accepted. Pass env overrides to test configuration-dependent behaviour, and a fake WorkOS
+ * to test web sign-in without calling WorkOS.
  */
-export function createTestApp(overrides: Record<string, string> = {}) {
+export function createTestApp(
+  overrides: Record<string, string> = {},
+  deps: { workos?: WorkosSessions } = {},
+) {
   const config = loadConfig({
     ...process.env,
     NODE_ENV: 'test',
@@ -23,6 +28,9 @@ export function createTestApp(overrides: Record<string, string> = {}) {
     SENTRY_DSN: '',
     CORS_ORIGINS: 'http://localhost:5173',
     WORKOS_CLIENT_ID: '',
+    WORKOS_API_KEY: '',
+    WORKOS_COOKIE_PASSWORD: '',
+    WEB_URL: 'http://localhost:5173',
     AUTHKIT_DOMAIN: '',
     ALLOWED_USER_IDS: '',
     MCP_RESOURCE_URL: 'http://localhost:3000/mcp',
@@ -30,7 +38,7 @@ export function createTestApp(overrides: Record<string, string> = {}) {
     ...overrides,
   });
   const db = createDb(config.DATABASE_URL, { max: 2 });
-  const app = createApp({ config, db, logger: pino({ level: 'silent' }) });
+  const app = createApp({ config, db, logger: pino({ level: 'silent' }), ...deps });
   return { app, db, config };
 }
 

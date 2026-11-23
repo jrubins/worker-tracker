@@ -35,8 +35,9 @@ resource "vercel_project_environment_variables" "web" {
   project_id = vercel_project.web.id
   variables = [
     for key, value in {
-      VITE_API_URL                            = local.api_url
-      VITE_WORKOS_CLIENT_ID                   = var.workos_client_id
+      # The browser calls the API at /api on the web app's own origin (rewrite in
+      # apps/web/vercel.json), so the session cookie is first-party.
+      VITE_API_URL                            = "/api"
       VITE_SENTRY_DSN                         = data.sentry_key.web.dsn["public"]
       VITE_SENTRY_ENVIRONMENT                 = "production"
       VITE_SENTRY_TRACES_SAMPLE_RATE          = tostring(var.sentry_traces_sample_rate)
@@ -55,6 +56,7 @@ resource "vercel_project_environment_variables" "api" {
     for key, value in merge(
       {
         CORS_ORIGINS              = local.web_url
+        WEB_URL                   = local.web_url
         APP_TIMEZONE              = var.app_timezone
         LOG_LEVEL                 = "info"
         WORKOS_CLIENT_ID          = var.workos_client_id
@@ -89,6 +91,33 @@ resource "vercel_project_environment_variable" "sentry_sourcemaps_token" {
   comment          = "Uploads source maps to Sentry during builds (managed by Terraform)"
   value_wo         = var.sentry_sourcemaps_token
   value_wo_version = var.sentry_sourcemaps_token_version
+  target           = local.production
+  sensitive        = true
+}
+
+resource "vercel_project_environment_variable" "workos_api_key" {
+  project_id       = vercel_project.api.id
+  key              = "WORKOS_API_KEY"
+  comment          = "WorkOS API key for server-side sign-in (managed by Terraform)"
+  value_wo         = var.workos_api_key
+  value_wo_version = var.workos_api_key_version
+  target           = local.production
+  sensitive        = true
+}
+
+# Encrypts the session cookie. Generated here and written straight to Vercel: it exists nowhere
+# else, and a new one is sent only when cookie_password_version is bumped.
+ephemeral "random_password" "cookie" {
+  length  = 48
+  special = false
+}
+
+resource "vercel_project_environment_variable" "cookie_password" {
+  project_id       = vercel_project.api.id
+  key              = "WORKOS_COOKIE_PASSWORD"
+  comment          = "Encrypts the session cookie (managed by Terraform)"
+  value_wo         = ephemeral.random_password.cookie.result
+  value_wo_version = var.cookie_password_version
   target           = local.production
   sensitive        = true
 }

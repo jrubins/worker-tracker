@@ -15,6 +15,12 @@ test.describe('signed out', () => {
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     await expect(page.getByRole('heading', { level: 1, name: 'This week' })).toBeVisible();
+
+    // The session is an HttpOnly cookie on the web app's origin, so it survives a reload.
+    const cookies = await page.context().cookies();
+    expect(cookies.find((cookie) => cookie.name === 'wt_dev_session')?.httpOnly).toBe(true);
+    await page.reload();
+    await expect(page.getByRole('heading', { level: 1, name: 'This week' })).toBeVisible();
   });
 });
 
@@ -25,6 +31,9 @@ test('signs out', async ({ page, user }) => {
 
   await page.getByRole('menuitem', { name: 'Sign out' }).click();
 
+  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+  // Signed out for good: a reload doesn't bring the session back.
+  await page.reload();
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
 });
 

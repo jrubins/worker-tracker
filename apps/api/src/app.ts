@@ -8,8 +8,11 @@ import type { Logger } from 'pino';
 import type { Db } from '@app/db';
 import { requireUser } from './auth/middleware.ts';
 import { createTokenVerifier, type TokenVerifier } from './auth/tokens.ts';
+import { createWebSessions } from './auth/web-sessions.ts';
+import { createWorkosSessions, type WorkosSessions } from './auth/workos-sessions.ts';
 import type { Config } from './config.ts';
 import { devAuthRouter } from './features/auth/dev-auth.routes.ts';
+import { sessionRouter } from './features/auth/session.routes.ts';
 import { healthRouter } from './features/health/health.routes.ts';
 import { createHealthService } from './features/health/health.service.ts';
 import { exercisesRouter } from './features/exercises/exercises.routes.ts';
@@ -29,6 +32,8 @@ export interface AppDeps {
   logger: Logger;
   /** Defaults to one built from config; tests may pass their own. */
   verifier?: TokenVerifier;
+  /** WorkOS web sign-in. Defaults to one built from config (when configured); tests pass a fake. */
+  workos?: WorkosSessions;
 }
 
 /**
@@ -38,7 +43,13 @@ export interface AppDeps {
  *
  * Every route requires a signed-in user except the public ones mounted before `requireUser`.
  */
-export function createApp({ config, db, logger, verifier: injected }: AppDeps): Express {
+export function createApp({
+  config,
+  db,
+  logger,
+  verifier: injected,
+  workos: injectedWorkos,
+}: AppDeps): Express {
   const app = express();
   const verifier =
     injected ??
@@ -48,6 +59,25 @@ export function createApp({ config, db, logger, verifier: injected }: AppDeps): 
       mcpResourceUrl: config.MCP_RESOURCE_URL,
       testSecret: config.AUTH_TEST_SECRET,
     });
+  const workos =
+    injectedWorkos ??
+    (config.WORKOS_API_KEY && config.WORKOS_CLIENT_ID && config.WORKOS_COOKIE_PASSWORD
+      ? createWorkosSessions({
+          apiKey: config.WORKOS_API_KEY,
+          clientId: config.WORKOS_CLIENT_ID,
+          cookiePassword: config.WORKOS_COOKIE_PASSWORD,
+          redirectUri: `${config.WEB_URL}/api/auth/callback`,
+          returnTo: config.WEB_URL,
+        })
+      : undefined);
+  const webSessions = createWebSessions({
+    verifier,
+    workos,
+    devSignIn: Boolean(config.AUTH_TEST_SECRET),
+    secure: config.WEB_URL.startsWith('https://'),
+  });
+  // The web app's own origin, plus any configured for cross-origin API clients.
+  const trustedOrigins = [...new Set([new URL(config.WEB_URL).origin, ...config.CORS_ORIGINS])];
   const timeZone = config.APP_TIMEZONE;
   const exercises = createExercisesService(db);
   const routines = createRoutinesService(db, exercises);
@@ -75,8 +105,9 @@ export function createApp({ config, db, logger, verifier: injected }: AppDeps): 
   if (config.AUTHKIT_DOMAIN) {
     app.use(mcpMetadataRouter(config.MCP_RESOURCE_URL, config.AUTHKIT_DOMAIN));
   }
+  app.use('/auth', sessionRouter({ webSessions, workos, webUrl: config.WEB_URL, trustedOrigins }));
   if (config.AUTH_TEST_SECRET) {
-    app.use('/auth', devAuthRouter(config.AUTH_TEST_SECRET));
+    app.use('/auth', devAuthRouter(config.AUTH_TEST_SECRET, webSessions));
   }
 
   // --- MCP (its own OAuth bearer auth) --------------------------------------------------
@@ -100,7 +131,14 @@ export function createApp({ config, db, logger, verifier: injected }: AppDeps): 
   });
 
   // --- Everything below requires a signed-in user -----------------------------------------
-  app.use(requireUser(verifier, config.ALLOWED_USER_IDS));
+  app.use(
+    requireUser({
+      verifier,
+      webSessions,
+      allowedUserIds: config.ALLOWED_USER_IDS,
+      trustedOrigins,
+    }),
+  );
   app.use('/exercises', exercisesRouter(exercises, stats));
   app.use('/workouts', workoutsRouter(workouts));
   app.use('/sets', setsRouter(workouts));

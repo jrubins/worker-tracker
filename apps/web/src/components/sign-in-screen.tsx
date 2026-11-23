@@ -6,8 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Logo } from './logo';
 
 interface SignInScreenProps {
-  /** 'authkit': one button that redirects to WorkOS. 'dev': sign in as any user ID. */
-  provider: 'authkit' | 'dev';
+  /** 'workos': one button that redirects to WorkOS. 'dev': sign in as any user ID. */
+  provider: 'workos' | 'dev';
   onSignIn: (userId?: string) => Promise<void>;
 }
 
