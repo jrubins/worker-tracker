@@ -49,6 +49,12 @@ jobs:
           terraform_version: 1.17.2
           terraform_wrapper: false
       - run: terraform fmt -check -recursive
+      # Fails fast with R2's own error code (e.g. SignatureDoesNotMatch, AccessDenied), which
+      # Terraform's state check doesn't show.
+      - name: Check access to the state bucket
+        run: >-
+          aws s3api list-objects-v2 --bucket "$TF_STATE_BUCKET" --max-keys 1
+          --endpoint-url "$AWS_ENDPOINT_URL_S3" --region auto > /dev/null
       - run: terraform init -backend-config="bucket=$TF_STATE_BUCKET"
       - run: terraform validate
       - name: Plan
@@ -68,6 +74,12 @@ jobs:
         with:
           terraform_version: 1.17.2
           terraform_wrapper: false
+      # Fails fast with R2's own error code (e.g. SignatureDoesNotMatch, AccessDenied), which
+      # Terraform's state check doesn't show.
+      - name: Check access to the state bucket
+        run: >-
+          aws s3api list-objects-v2 --bucket "$TF_STATE_BUCKET" --max-keys 1
+          --endpoint-url "$AWS_ENDPOINT_URL_S3" --region auto > /dev/null
       - run: terraform init -backend-config="bucket=$TF_STATE_BUCKET"
       - run: terraform apply -auto-approve
       - id: outputs
