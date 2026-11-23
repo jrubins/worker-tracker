@@ -19,6 +19,8 @@ export function ProgressChart({ points }: { points: readonly ProgressPoint[] }) 
     [points],
   );
   const definition = useMemo(() => {
+    // The scale needs data: below two sessions the empty state shows instead.
+    if (rows.length < 2) return null;
     const values = rows.map((row) => row.e1rm);
     // Start near the data, not at zero: the change between sessions is what matters here.
     const min = Math.max(0, Math.floor((Math.min(...values) * 0.9) / 5) * 5);
@@ -56,10 +58,11 @@ export function ProgressChart({ points }: { points: readonly ProgressPoint[] }) 
     });
   }, [rows]);
 
-  if (rows.length < 2) {
+  if (!definition) {
     return (
       <EmptyState icon={<TrendingUp />} title="Not enough sessions yet.">
-        The chart appears after two sessions with weighted working sets.
+        The chart appears after two sessions with an estimated 1RM (weighted working sets; for
+        weighted bodyweight lifts, once your bodyweight is logged).
       </EmptyState>
     );
   }

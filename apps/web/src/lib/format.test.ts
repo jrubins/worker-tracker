@@ -19,6 +19,27 @@ describe('format', () => {
     expect(formatSet({ weightLb: null, reps: 10, rpe: null })).toBe('BW × 10');
   });
 
+  it('formats load types and timed sets', () => {
+    const set = { rpe: null, durationSeconds: null };
+    expect(formatSet({ ...set, weightLb: 35, reps: 10, loadType: 'per_hand' })).toBe(
+      '35 lb ea × 10',
+    );
+    expect(formatSet({ ...set, weightLb: 10, reps: 6, loadType: 'bodyweight_plus' })).toBe(
+      'BW + 10 lb × 6',
+    );
+    expect(formatSet({ ...set, weightLb: null, reps: 8, loadType: 'bodyweight_plus' })).toBe(
+      'BW × 8',
+    );
+    expect(formatSet({ ...set, weightLb: null, reps: null, durationSeconds: 90 })).toBe('1:30');
+    expect(formatSet({ ...set, weightLb: null, reps: null, durationSeconds: 45 })).toBe('45 s');
+    expect(
+      formatSet({ ...set, weightLb: 50, reps: null, durationSeconds: 60, loadType: 'per_hand' }),
+    ).toBe('50 lb ea · 1:00');
+    expect(formatSet({ ...set, weightLb: 25, reps: 5, durationSeconds: 30 })).toBe(
+      '25 lb × 5 · 30 s',
+    );
+  });
+
   it('formats calendar dates without shifting the day', () => {
     expect(formatDate('2026-11-20', new Date(2026, 0, 1))).toBe('Fri, Nov 20');
     expect(formatDate('2025-01-03', new Date(2026, 0, 1))).toBe('Fri, Jan 3, 2025');

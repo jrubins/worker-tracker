@@ -1,8 +1,12 @@
 import type { Db } from '@app/db';
 import {
   EquipmentSchema,
+  LoadTypeSchema,
   type CreateExercise,
+  type Equipment,
   type Exercise,
+  type ExerciseLink,
+  type LoadType,
   type NewExerciseNotice,
   type SimilarExercise,
   type UpdateExercise,
@@ -23,7 +27,9 @@ interface ExerciseRow {
   name: string;
   aliases: readonly string[];
   equipment: string | null;
+  loadType: string;
   notes: string | null;
+  links: readonly { url: string; label?: string | null }[];
   confirmed: boolean;
 }
 
@@ -32,9 +38,25 @@ export const toExercise = (row: ExerciseRow): Exercise => ({
   name: row.name,
   aliases: [...row.aliases],
   equipment: EquipmentSchema.safeParse(row.equipment).data ?? null,
+  loadType: LoadTypeSchema.safeParse(row.loadType).data ?? 'total',
   notes: row.notes,
+  links: row.links.map((link) => ({ url: link.url, label: link.label ?? null })),
   confirmed: row.confirmed,
 });
+
+/** The load type an exercise gets when none is given: what its equipment usually means. */
+export const defaultLoadType = (equipment: Equipment | null | undefined): LoadType =>
+  equipment === 'dumbbell' ? 'per_hand' : equipment === 'bodyweight' ? 'bodyweight_plus' : 'total';
+
+/** Links as stored: no duplicate addresses, a label or null. */
+const toLinks = (links: readonly { url: string; label?: string | null }[]): ExerciseLink[] => {
+  const seen = new Set<string>();
+  return links.flatMap((link) => {
+    if (seen.has(link.url)) return [];
+    seen.add(link.url);
+    return [{ url: link.url, label: link.label ?? null }];
+  });
+};
 
 const conflict = (message: string) => new HttpError(409, 'conflict', message);
 
@@ -102,7 +124,9 @@ export function createExercisesService(db: Db) {
         nameKey: nameKey(input.name),
         aliases: input.aliases ?? [],
         equipment: input.equipment ?? null,
+        loadType: input.loadType ?? defaultLoadType(input.equipment),
         notes: input.notes ?? null,
+        links: toLinks(input.links ?? []),
         confirmed: true,
       });
       return toExercise(row);
@@ -123,7 +147,9 @@ export function createExercisesService(db: Db) {
         ...(patch.name ? { name: patch.name, nameKey: nameKey(patch.name) } : {}),
         aliases,
         ...(patch.equipment !== undefined ? { equipment: patch.equipment } : {}),
+        ...(patch.loadType !== undefined ? { loadType: patch.loadType } : {}),
         ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
+        ...(patch.links !== undefined ? { links: toLinks(patch.links) } : {}),
       });
       if (!updated) throw notFound(`Exercise ${id} not found`);
       return toExercise(updated);
@@ -172,7 +198,9 @@ export function createExercisesService(db: Db) {
         nameKey: nameKey(name),
         aliases: [],
         equipment: null,
+        loadType: 'total',
         notes: null,
+        links: [],
         confirmed: options.confirmed,
       });
       const exercise = toExercise(row);
@@ -198,7 +226,7 @@ export function createExercisesService(db: Db) {
 
     /**
      * Folds `fromId` into `intoId`: its sets and planned entries move over, its name and aliases
-     * become aliases of `intoId`, and it is deleted.
+     * become aliases of `intoId`, its links are added to `intoId`'s, and it is deleted.
      */
     async merge(userId: string, fromId: number, intoId: number): Promise<Exercise> {
       if (fromId === intoId)
@@ -226,6 +254,7 @@ export function createExercisesService(db: Db) {
         await tx.orm.public.Exercise.where({ id: fromId, userId }).delete();
         const merged = await tx.orm.public.Exercise.where({ id: intoId, userId }).update({
           aliases,
+          links: toLinks([...into.links, ...from.links]),
           confirmed: true,
         });
         if (!merged) throw notFound(`Exercise ${intoId} not found`);

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
-import { warmupSet, workingSet } from './fixtures';
+import { sampleSets, warmupSet, workingSet } from './fixtures';
 import { SetEditor } from './set-editor';
 
 const meta = {
@@ -8,7 +8,8 @@ const meta = {
   component: SetEditor,
   args: {
     set: workingSet,
-    number: 2,
+    label: 'set 2',
+    marker: '2',
     onSave: fn(async () => {}),
     onDelete: fn(async () => {}),
   },
@@ -18,7 +19,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Working: Story = {};
-export const WarmupWithNotes: Story = { args: { set: { ...warmupSet, notes: 'Easy' }, number: 1 } };
+export const WarmupWithNotes: Story = {
+  args: { set: { ...warmupSet, notes: 'Easy' }, label: 'set 1', marker: '1' },
+};
+export const DropSet: Story = {
+  args: { set: sampleSets[3] ?? workingSet, label: 'drop set after set 3', marker: '↳' },
+};
+export const Timed: Story = {
+  args: { set: sampleSets[6] ?? workingSet, label: 'set 1', marker: '1' },
+};
 
 /** Fixing a mistyped weight. */
 export const FixWeight: Story = {
@@ -32,9 +41,33 @@ export const FixWeight: Story = {
     await expect(args.onSave).toHaveBeenCalledWith({
       weightLb: 230,
       reps: 5,
+      durationSeconds: null,
       rpe: 8,
-      warmup: false,
+      setType: 'working',
     });
+  },
+};
+
+/** Marking a set as a drop set. */
+export const MarkAsDrop: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Edit set 2' }));
+    await userEvent.selectOptions(canvas.getByLabelText('Set type'), 'Drop set');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await expect(args.onSave).toHaveBeenCalledWith(expect.objectContaining({ setType: 'drop' }));
+  },
+};
+
+/** A set needs reps or a time. */
+export const NeedsRepsOrTime: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Edit set 2' }));
+    await userEvent.clear(canvas.getByLabelText('Reps'));
+    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await expect(await canvas.findByText('Give reps, a time, or both')).toBeInTheDocument();
+    await expect(args.onSave).not.toHaveBeenCalled();
   },
 };
 

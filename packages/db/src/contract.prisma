@@ -7,6 +7,32 @@
 // by it. Child rows (routine versions and their exercises) are only reached through an owned
 // parent. Weights are pounds.
 
+// How a set's weight turns into load: `total` (barbell, machine, goblet squat: the weight is
+// the load), `per_hand` (one dumbbell per hand: weight is per dumbbell, volume counts both) or
+// `bodyweight_plus` (pull-ups, dips: weight is the added load on top of bodyweight).
+enum LoadType {
+  @@type("pg/text@1")
+  total           = "total"
+  per_hand        = "per_hand"
+  bodyweight_plus = "bodyweight_plus"
+}
+
+// `working` sets count toward everything. `warmup` sets count toward nothing. A `drop` set
+// continues the set before it: its reps count toward volume, but it isn't a set of its own and
+// never sets a record.
+enum SetType {
+  @@type("pg/text@1")
+  working = "working"
+  warmup  = "warmup"
+  drop    = "drop"
+}
+
+// A reference for an exercise: a how-to video, an article.
+type ExerciseLink {
+  url   String
+  label String?
+}
+
 // A lift, e.g. "Bench Press". `nameKey` is the normalized name (lowercase, no punctuation,
 // abbreviations expanded), unique per user, so "bench press" and "Bench-Press" are one exercise.
 model Exercise {
@@ -18,7 +44,9 @@ model Exercise {
   aliases   String[]
   // barbell | dumbbell | machine | cable | bodyweight | other
   equipment String?
+  loadType  LoadType           @default(total)
   notes     String?
+  links     ExerciseLink[]
   // False when created automatically while logging an unrecognized name: Claude asks at the end
   // of the workout whether to keep it or merge it into an existing exercise.
   confirmed Boolean            @default(true)
@@ -90,6 +118,8 @@ model Workout {
   routineVersion   RoutineVersion?    @relation(fields: [routineVersionId], references: [id], onDelete: SetNull)
   startedAt        DateTime?
   durationMinutes  Int?
+  // The user's bodyweight that day, if known: the base load for bodyweight_plus exercises.
+  bodyweightLb     Decimal(precision: 5, scale: 1)?
   notes            String?
   createdAt        DateTime           @default(now()) @onCreate(now())
   updatedAt        temporal.UpdatedAt
@@ -98,8 +128,9 @@ model Workout {
   @@index([userId, date])
 }
 
-// One set. Weight is the load in lb (for bodyweight lifts, the added weight; null when none).
-// Effort is stored as RPE; RIR input is converted (RPE = 10 - RIR).
+// One set. Weight is in lb, as the exercise's load type reads it (per dumbbell for per_hand, the
+// added weight for bodyweight_plus; null when none). A set has reps, a duration (planks, carries)
+// or both. Effort is stored as RPE; RIR input is converted (RPE = 10 - RIR).
 model WorkoutSet {
   id         Int                             @id @default(autoincrement())
   userId     String
@@ -111,9 +142,10 @@ model WorkoutSet {
   // Order within the workout.
   position   Int
   weightLb   Decimal(precision: 6, scale: 2)?
-  reps       Int
+  reps       Int?
+  durationSeconds Int?
   rpe        Decimal(precision: 3, scale: 1)?
-  warmup     Boolean                         @default(false)
+  setType    SetType                         @default(working)
   notes      String?
   createdAt  DateTime                        @default(now()) @onCreate(now())
 

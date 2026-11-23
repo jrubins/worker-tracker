@@ -9,11 +9,14 @@ what you lifted last time and track progress. The web dashboard is for looking b
   past sessions can be imported with their date), corrections, last session, personal records,
   progress, weekly summary, and exercise names (aliases, review, merge).
 - **Dashboard:** this week (sessions, sets, volume, streak), weekly volume, recent PRs;
-  history with set-level fixes; per-exercise last session, records and progress chart;
-  routines with version history.
+  history with set-level fixes; per-exercise last session, records, progress chart and
+  reference links (how-to videos, articles); routines with version history.
 - **Training rules:** weights in lb; effort stored as RPE (RIR is converted, RPE = 10 − RIR);
   dates are calendar dates in `APP_TIMEZONE` (America/Chicago), weeks start Monday; estimated
-  1RM is Epley; warm-ups never count toward volume or records.
+  1RM is Epley. Sets are working, warm-up (counts toward nothing) or drop (adds volume, but
+  isn't a set of its own or a record); timed sets (planks, carries) log a duration. Each
+  exercise's load type says how weight reads: total, per hand (one dumbbell; volume counts
+  both) or bodyweight plus added load (estimates use the logged bodyweight).
 - **Exercise names:** logging never blocks on an unknown name. It's saved as a new
   _unconfirmed_ exercise with similar existing ones suggested; at the end of the workout Claude
   asks whether to merge it (the name becomes an alias) or keep it.

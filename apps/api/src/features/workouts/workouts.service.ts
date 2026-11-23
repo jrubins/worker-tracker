@@ -1,17 +1,21 @@
 import * as Sentry from '@sentry/node';
 import type { Db } from '@app/db';
-import type {
-  AddSets,
-  LogResult,
-  LogWorkout,
-  NewExerciseNotice,
-  UpdateSet,
-  Workout,
-  WorkoutSet,
-  WorkoutSummary,
+import {
+  LoadTypeSchema,
+  SetTypeSchema,
+  setTypeOf,
+  type AddSets,
+  type LogResult,
+  type LogWorkout,
+  type NewExerciseNotice,
+  type UpdateSet,
+  type UpdateWorkout,
+  type Workout,
+  type WorkoutSet,
+  type WorkoutSummary,
 } from '@app/shared';
-import { notFound } from '../../lib/http-error.ts';
-import { effortAsRpe, estimateOneRepMax, localDate } from '../../lib/training.ts';
+import { HttpError, notFound } from '../../lib/http-error.ts';
+import { bodyweightOn, effortAsRpe, localDate, setMetrics } from '../../lib/training.ts';
 import type { ExercisesService, Orm } from '../exercises/exercises.service.ts';
 import type { RoutinesService } from '../routines/routines.service.ts';
 
@@ -22,33 +26,73 @@ interface SetRow {
   id: number;
   exerciseId: number;
   position: number;
+  setType: string;
   weightLb: string | null;
-  reps: number;
+  reps: number | null;
+  durationSeconds: number | null;
   rpe: string | null;
-  warmup: boolean;
   notes: string | null;
-  exercise: { name: string } | null;
+  exercise: { name: string; loadType: string } | null;
 }
 
-export const toWorkoutSet = (row: SetRow): WorkoutSet => {
+/** A set as returned, with its load, volume and estimate (see `setMetrics`). */
+export const toWorkoutSet = (row: SetRow, bodyweightLb: number | null): WorkoutSet => {
   const weightLb = toNumber(row.weightLb);
+  const setType = SetTypeSchema.safeParse(row.setType).data ?? 'working';
+  const loadType = LoadTypeSchema.safeParse(row.exercise?.loadType).data ?? 'total';
+  const { loadLb, volumeLb, e1rmLb } = setMetrics({
+    setType,
+    loadType,
+    weightLb,
+    reps: row.reps,
+    bodyweightLb,
+  });
   return {
     id: row.id,
     exerciseId: row.exerciseId,
     exerciseName: row.exercise?.name ?? 'Unknown exercise',
+    loadType,
     position: row.position,
+    setType,
     weightLb,
     reps: row.reps,
+    durationSeconds: row.durationSeconds,
     rpe: toNumber(row.rpe),
-    warmup: row.warmup,
     notes: row.notes,
-    e1rmLb: row.warmup ? null : estimateOneRepMax(weightLb, row.reps),
+    loadLb,
+    volumeLb,
+    e1rmLb,
   };
 };
 
-/** Working (non-warm-up) volume: weight × reps. */
+/** Total volume of some sets (warm-ups add none; drop sets do). */
 export const volumeOf = (sets: readonly WorkoutSet[]) =>
-  sets.reduce((sum, set) => (set.warmup ? sum : sum + (set.weightLb ?? 0) * set.reps), 0);
+  Math.round(sets.reduce((sum, set) => sum + set.volumeLb, 0) * 10) / 10;
+
+/** Sets of their own: working sets (warm-ups don't count; a drop continues the set before). */
+export const countedSets = (sets: readonly WorkoutSet[]) =>
+  sets.filter((set) => set.setType === 'working').length;
+
+/** The exercise fields a set needs to compute its load. */
+export const setExerciseFields = ['name', 'loadType'] as const;
+
+/**
+ * The user's logged bodyweights, and a function giving the bodyweight to use for a workout:
+ * its own, else the nearest logged one (see `bodyweightOn`).
+ */
+export async function bodyweights(orm: Orm, userId: string) {
+  const rows = await orm.public.Workout.where({ userId })
+    .select('date', 'bodyweightLb')
+    .all()
+    .toArray();
+  const logged = rows.flatMap((row) =>
+    row.bodyweightLb === null ? [] : [{ date: row.date, bodyweightLb: Number(row.bodyweightLb) }],
+  );
+  return (workout: { date: string; bodyweightLb: string | null }) =>
+    workout.bodyweightLb === null
+      ? bodyweightOn(logged, workout.date)
+      : Number(workout.bodyweightLb);
+}
 
 export function createWorkoutsService(
   db: Db,
@@ -58,7 +102,7 @@ export function createWorkoutsService(
     orm.public.Workout.include('sets', (sets) =>
       sets
         .orderBy([(s) => s.position.asc(), (s) => s.id.asc()])
-        .include('exercise', (e) => e.select('name')),
+        .include('exercise', (e) => e.select(...setExerciseFields)),
     ).include('routineVersion', (version) =>
       version.include('routine', (routine) => routine.select('id', 'name')),
     );
@@ -66,6 +110,7 @@ export function createWorkoutsService(
   const load = async (orm: Orm, userId: string, id: number): Promise<Workout> => {
     const row = await withDetails(orm).where({ id, userId }).first();
     if (!row) throw notFound(`Workout ${id} not found`);
+    const bodyweightLb = (await bodyweights(orm, userId))(row);
     const version = row.routineVersion;
     return {
       id: row.id,
@@ -81,8 +126,9 @@ export function createWorkoutsService(
           : null,
       startedAt: row.startedAt?.toISOString() ?? null,
       durationMinutes: row.durationMinutes,
+      bodyweightLb: toNumber(row.bodyweightLb),
       notes: row.notes,
-      sets: row.sets.map(toWorkoutSet),
+      sets: row.sets.map((set) => toWorkoutSet(set, bodyweightLb)),
     };
   };
 
@@ -109,10 +155,11 @@ export function createWorkoutsService(
           workoutId,
           exerciseId: exercise.id,
           position: position++,
+          setType: setTypeOf(set),
           weightLb: decimal(set.weightLb ?? null),
-          reps: set.reps,
+          reps: set.reps ?? null,
+          durationSeconds: set.durationSeconds ?? null,
           rpe: decimal(effortAsRpe(set)),
-          warmup: set.warmup ?? false,
           notes: set.notes ?? null,
         });
       }
@@ -131,14 +178,16 @@ export function createWorkoutsService(
         .limit(limit)
         .all()
         .toArray();
+      const bodyweightFor = await bodyweights(db.orm, userId);
       return rows.map((row) => {
-        const sets = row.sets.map(toWorkoutSet);
+        const bodyweightLb = bodyweightFor(row);
+        const sets = row.sets.map((set) => toWorkoutSet(set, bodyweightLb));
         return {
           id: row.id,
           date: row.date,
           routineName: row.routineVersion?.routine?.name ?? null,
           exerciseNames: [...new Set(sets.map((s) => s.exerciseName))],
-          workingSets: sets.filter((s) => !s.warmup).length,
+          workingSets: countedSets(sets),
           volumeLb: volumeOf(sets),
         };
       });
@@ -159,6 +208,7 @@ export function createWorkoutsService(
           routineVersionId,
           startedAt: input.startedAt ? new Date(input.startedAt) : null,
           durationMinutes: input.durationMinutes ?? null,
+          bodyweightLb: decimal(input.bodyweightLb ?? null),
           notes: input.notes ?? null,
         });
         const newExercises = await appendSets(tx.orm, userId, workout.id, input.exercises ?? []);
@@ -177,20 +227,42 @@ export function createWorkoutsService(
     },
 
     async updateSet(userId: string, setId: number, patch: UpdateSet): Promise<WorkoutSet> {
+      const current = await db.orm.public.WorkoutSet.where({ id: setId, userId }).first();
+      if (!current) throw notFound(`Set ${setId} not found`);
+      const reps = patch.reps !== undefined ? patch.reps : current.reps;
+      const durationSeconds =
+        patch.durationSeconds !== undefined ? patch.durationSeconds : current.durationSeconds;
+      if (reps === null && durationSeconds === null) {
+        throw new HttpError(400, 'validation_error', 'A set needs reps, durationSeconds, or both');
+      }
       const rpe = patch.rir !== undefined ? effortAsRpe({ rir: patch.rir }) : patch.rpe;
-      const updated = await db.orm.public.WorkoutSet.where({ id: setId, userId }).update({
+      const setType =
+        patch.setType ??
+        (patch.warmup === undefined ? undefined : patch.warmup ? 'warmup' : 'working');
+      await db.orm.public.WorkoutSet.where({ id: setId, userId }).update({
         ...(patch.weightLb !== undefined ? { weightLb: decimal(patch.weightLb) } : {}),
-        ...(patch.reps !== undefined ? { reps: patch.reps } : {}),
+        reps,
+        durationSeconds,
         ...(rpe !== undefined ? { rpe: decimal(rpe) } : {}),
-        ...(patch.warmup !== undefined ? { warmup: patch.warmup } : {}),
+        ...(setType !== undefined ? { setType } : {}),
         ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
       });
-      if (!updated) throw notFound(`Set ${setId} not found`);
-      const row = await db.orm.public.WorkoutSet.where({ id: setId, userId })
-        .include('exercise', (e) => e.select('name'))
-        .first();
-      if (!row) throw notFound(`Set ${setId} not found`);
-      return toWorkoutSet(row);
+      const workout = await load(db.orm, userId, current.workoutId);
+      const set = workout.sets.find((s) => s.id === setId);
+      if (!set) throw notFound(`Set ${setId} not found`);
+      return set;
+    },
+
+    /** Corrects a workout's date, duration, bodyweight or notes. */
+    async updateWorkout(userId: string, id: number, patch: UpdateWorkout): Promise<Workout> {
+      const updated = await db.orm.public.Workout.where({ id, userId }).update({
+        ...(patch.date !== undefined ? { date: patch.date } : {}),
+        ...(patch.durationMinutes !== undefined ? { durationMinutes: patch.durationMinutes } : {}),
+        ...(patch.bodyweightLb !== undefined ? { bodyweightLb: decimal(patch.bodyweightLb) } : {}),
+        ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
+      });
+      if (!updated) throw notFound(`Workout ${id} not found`);
+      return load(db.orm, userId, id);
     },
 
     async deleteSet(userId: string, setId: number): Promise<void> {

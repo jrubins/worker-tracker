@@ -7,6 +7,7 @@ import {
   SaveRoutineSchema,
   UpdateExerciseSchema,
   UpdateSetSchema,
+  UpdateWorkoutSchema,
 } from '@app/shared';
 import { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
@@ -27,11 +28,20 @@ const INSTRUCTIONS = `
 Workout tracker for one lifter. Weights are pounds (lb). Effort is RPE 1-10; you may log RIR instead (stored as RPE = 10 - RIR).
 Dates are the user's local calendar dates (YYYY-MM-DD); omit a date to use today.
 
+How sets are read:
+- Each exercise has a loadType. "total": the weight is the load (barbell, machine, goblet squat). "per_hand": one dumbbell per hand; log the weight of ONE dumbbell, and volume counts both hands (curls, DB presses, DB rows, lunges). "bodyweight_plus": pull-ups, dips, push-ups; log only the ADDED weight (omit it for bodyweight alone), and estimated 1RMs use bodyweight + added once the user's bodyweight is known.
+- New exercises get a loadType from their equipment (dumbbell: per_hand, bodyweight: bodyweight_plus, else total). Names first met while logging start as total: set the right loadType with update_exercise when you review them.
+- Bodyweight: pass bodyweightLb to log_workout whenever the user mentions it (or update_workout later). Sessions without one use the nearest logged bodyweight.
+- setType: "working" (default), "warmup" (counts toward nothing; warmup: true is shorthand), or "drop": a drop set continues the set logged just before it (12, 12, 9 then a drop of 3 is three sets). Drops add volume but never set a record or an estimated 1RM.
+- Timed sets (planks, dead hangs, carries, a 5-minute core video) give durationSeconds, with or without reps.
+
 Planning a session: call list_routines (the user rotates through them), then get_last_session for the key lifts and get_personal_records to pick weights. Adjust to how the user feels; only call save_routine when they want the plan itself changed (always give a changeNote saying what changed and why).
 
 Logging: log_workout for a whole session (also for importing past sessions with their date), or log_workout with no exercises followed by add_sets to log live. Use exercise names as the user says them; the server resolves names and aliases. When a name is not recognized, the sets are still logged under a new *unconfirmed* exercise and the response lists similar existing exercises: mention it in a short line and keep going. At the end of the workout, call review_new_exercises and ask the user, for each one, whether to merge it into a suggested match (merge_exercises) or keep it (confirm_exercise).
 
-Corrections: get_workout, then update_set / delete_set / delete_workout.
+Corrections: get_workout, then update_set / delete_set / update_workout / delete_workout.
+
+Exercises can keep reference links (a how-to video, an article): set them with update_exercise (links replaces the whole list).
 `.trim();
 
 /** Tool results as pretty JSON text (what the assistant reads). */
@@ -119,7 +129,7 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     {
       title: 'Personal records',
       description:
-        'Best estimated 1RM, heaviest set and rep maxes (1-12 reps) for one exercise, or for every exercise when none is given.',
+        'Best estimated 1RM, heaviest set, most reps, rep maxes (1-12 reps) and longest timed hold for one exercise, or for every exercise when none is given. Working sets only (never warm-ups or drops). For bodyweight_plus exercises weights are the added load, and the 1RM estimate needs a known bodyweight.',
       inputSchema: z.object({ exercise: NameSchema.optional() }),
       annotations: readOnly,
     },
@@ -185,7 +195,7 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     {
       title: 'Log workout',
       description:
-        'Log a session: all of it at once, or start one with no exercises and add sets as you go with add_sets. Give `date` to import a past session. Unrecognized exercise names come back in `newExercises` with similar matches.',
+        'Log a session: all of it at once, or start one with no exercises and add sets as you go with add_sets. Give `date` to import a past session, and `bodyweightLb` when known. Each set has reps, durationSeconds, or both; setType marks warm-ups and drop sets (a drop follows the set it continues). Weights per dumbbell for per_hand exercises, added load for bodyweight_plus. Unrecognized exercise names come back in `newExercises` with similar matches.',
       inputSchema: LogWorkoutSchema,
     },
     async (input) => json(await workouts.log(userId, input)),
@@ -196,7 +206,7 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     {
       title: 'Add sets',
       description:
-        'Append sets to a workout (live logging). Unrecognized names come back in `newExercises`.',
+        'Append sets to a workout (live logging), in the order done: a drop set right after the set it continues. Same set fields as log_workout. Unrecognized names come back in `newExercises`.',
       inputSchema: AddSetsSchema,
     },
     async (input) => json(await workouts.addSets(userId, input)),
@@ -206,10 +216,26 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     'update_set',
     {
       title: 'Fix a set',
-      description: 'Correct a logged set (weight, reps, RPE or RIR, warm-up flag, notes).',
+      description:
+        'Correct a logged set: weight, reps, durationSeconds, RPE or RIR, setType (working, warmup, drop), notes.',
       inputSchema: z.object({ setId: z.number().int().positive(), changes: UpdateSetSchema }),
     },
     async ({ setId, changes }) => json(await workouts.updateSet(userId, setId, changes)),
+  );
+
+  server.registerTool(
+    'update_workout',
+    {
+      title: 'Fix a workout',
+      description:
+        "Correct a session's date, duration, notes, or bodyweight (e.g. add the user's bodyweight to past sessions so pull-up estimates work).",
+      inputSchema: z.object({
+        workoutId: z.number().int().positive(),
+        changes: UpdateWorkoutSchema,
+      }),
+    },
+    async ({ workoutId, changes }) =>
+      json(await workouts.updateWorkout(userId, workoutId, changes)),
   );
 
   server.registerTool(
@@ -246,7 +272,7 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     {
       title: 'List exercises',
       description:
-        'Every exercise with its aliases; unconfirmed ones were created from unrecognized names.',
+        'Every exercise with its aliases, load type and links; unconfirmed ones were created from unrecognized names.',
       annotations: readOnly,
     },
     async () => json(await exercises.list(userId)),
@@ -256,7 +282,8 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     'create_exercise',
     {
       title: 'Create exercise',
-      description: 'Add an exercise explicitly (logging creates unknown ones automatically).',
+      description:
+        'Add an exercise explicitly (logging creates unknown ones automatically), with its loadType (defaults from equipment) and any reference links.',
       inputSchema: CreateExerciseSchema,
     },
     async (input) => json(await exercises.create(userId, input)),
@@ -267,7 +294,7 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     {
       title: 'Update exercise',
       description:
-        'Rename an exercise, add aliases (other names for it), or set equipment and notes.',
+        'Rename an exercise, add aliases (other names for it), or set equipment, loadType (total, per_hand, bodyweight_plus), notes, or links (a how-to video or article; replaces the whole list).',
       inputSchema: z.object({
         exerciseId: z.number().int().positive(),
         changes: UpdateExerciseSchema,
@@ -281,7 +308,7 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     {
       title: 'Review new exercises',
       description:
-        'Exercises created from unrecognized names, each with likely matches. Call at the end of a workout and ask the user: merge into a match, or keep as new.',
+        'Exercises created from unrecognized names, each with likely matches. Call at the end of a workout and ask the user: merge into a match, or keep as new (then set its loadType if it is not "total").',
       annotations: readOnly,
     },
     async () => json(await exercises.listUnconfirmed(userId)),
@@ -302,7 +329,7 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     {
       title: 'Merge exercises',
       description:
-        'Fold one exercise into another: its sets and planned entries move over and its name becomes an alias, so it is recognized next time.',
+        'Fold one exercise into another: its sets, planned entries and links move over and its name becomes an alias, so it is recognized next time.',
       inputSchema: MergeExercisesSchema,
       annotations: { destructiveHint: true },
     },

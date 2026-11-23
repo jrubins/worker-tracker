@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import { Timer, Trash2 } from 'lucide-react';
+import { Scale, Timer, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { StatTile } from '@/components/stat-tile';
@@ -24,8 +24,8 @@ export function WorkoutPage() {
   const navigate = useNavigate();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  const working = workout.sets.filter((set) => !set.warmup);
-  const volume = working.reduce((sum, set) => sum + (set.weightLb ?? 0) * set.reps, 0);
+  const working = workout.sets.filter((set) => set.setType === 'working');
+  const volume = workout.sets.reduce((sum, set) => sum + set.volumeLb, 0);
   const exercises = new Set(workout.sets.map((set) => set.exerciseId)).size;
   const bestE1rm = Math.max(0, ...working.map((set) => set.e1rmLb ?? 0));
 
@@ -48,6 +48,12 @@ export function WorkoutPage() {
             {workout.durationMinutes} min
           </span>
         ) : null}
+        {workout.bodyweightLb === null ? null : (
+          <span className="flex items-center gap-1">
+            <Scale className="size-4" aria-hidden />
+            {formatNumber(workout.bodyweightLb)} lb bodyweight
+          </span>
+        )}
       </PageHeader>
 
       {workout.notes ? (
