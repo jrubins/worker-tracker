@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react';
 import { useEffect, type ReactNode } from 'react';
 import { useSession } from '@/lib/session';
+import { LoadingScreen } from './loading-screen';
 import { SignInScreen } from './sign-in-screen';
 
 /**
@@ -27,7 +28,7 @@ export function SessionGate({ children }: { children: ReactNode }) {
   }, [user]);
 
   if (status === 'loading') {
-    return <p className="text-muted-foreground p-8 text-sm">Loading…</p>;
+    return <LoadingScreen />;
   }
   if (status === 'error') {
     return <p className="p-8 text-sm">Can't reach the server. Check your connection and reload.</p>;
