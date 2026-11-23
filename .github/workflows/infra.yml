@@ -1,0 +1,98 @@
+name: Infrastructure
+
+# Terraform in infra/: plan on pull requests, apply on the production branch, then apply
+# database migrations to Neon. State is in HCP Terraform; runs execute here (Local mode).
+on:
+  pull_request:
+    paths: ['infra/**', '.github/workflows/infra.yml']
+  push:
+    branches: [main]
+    paths: ['infra/**', 'packages/db/migrations/**', '.github/workflows/infra.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: infra
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: '1'
+  TF_INPUT: '0'
+  TF_CLOUD_ORGANIZATION: ${{ vars.TF_CLOUD_ORGANIZATION }}
+  TF_WORKSPACE: ${{ vars.TF_WORKSPACE }}
+  TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+  VERCEL_API_TOKEN: ${{ secrets.VERCEL_API_TOKEN }}
+  NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+  # The default GITHUB_TOKEN can't change repository settings or rulesets.
+  GITHUB_TOKEN: ${{ secrets.INFRA_GITHUB_TOKEN }}
+  TF_VAR_sentry_sourcemaps_token: ${{ secrets.SENTRY_SOURCEMAPS_TOKEN }}
+
+defaults:
+  run:
+    working-directory: infra
+
+jobs:
+  plan:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.17.2
+          terraform_wrapper: false
+      - run: terraform fmt -check -recursive
+      - run: terraform init
+      - run: terraform validate
+      - name: Plan
+        run: |
+          terraform plan -no-color -out=tfplan
+          { echo '```'; terraform show -no-color tfplan; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+  apply:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      neon_project_id: ${{ steps.outputs.outputs.neon_project_id }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.17.2
+          terraform_wrapper: false
+      - run: terraform init
+      - run: terraform apply -auto-approve
+      - id: outputs
+        run: echo "neon_project_id=$(terraform output -raw neon_project_id)" >> "$GITHUB_OUTPUT"
+
+  migrate:
+    needs: apply
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The direct (non-pooled) connection: migrations need a session, not PgBouncer.
+      - name: Apply migrations
+        env:
+          NEON_PROJECT_ID: ${{ needs.apply.outputs.neon_project_id }}
+          PRISMA_DISABLE_TELEMETRY: '1'
+        run: |
+          DATABASE_URL="$(pnpm dlx neonctl@9.9.3 connection-string main \
+            --project-id "$NEON_PROJECT_ID" --database-name app --role-name app)"
+          echo "::add-mask::$DATABASE_URL"
+          export DATABASE_URL
+          pnpm db:migrate

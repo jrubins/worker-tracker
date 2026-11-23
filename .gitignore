@@ -18,3 +18,11 @@ apps/e2e/screenshots/
 .env.*
 !.env.example
 .env.keys
+
+# Terraform: providers and local state/plans (state lives in HCP Terraform)
+.terraform/
+*.tfplan
+tfplan
+*.tfstate
+*.tfstate.*
+crash.log

@@ -24,8 +24,8 @@ A change is done when **`pnpm check` and `pnpm e2e` pass** and:
 - UI changes are checked visually: look at the screenshots `pnpm e2e` saves in
   `apps/e2e/screenshots/`
 - any change to `packages/db/src/contract.prisma` has an emitted contract and a planned migration
-- new environment variables are in `.env.example`, validated in config, and in the README if
-  they affect deployment
+- new environment variables are in `.env.example`, validated in config, and, if production
+  needs them, set in `infra/vercel.tf`
 
 ## Commands
 
@@ -65,6 +65,7 @@ apps/web/src/
   lib/                    apiRequest (adds the access token), session, env, Sentry setup
 apps/e2e/tests/           Playwright end-to-end specs (fixtures.ts: unique(), capture())
 scripts/bootstrap.ts      one-step local setup
+infra/                    Terraform: Neon, Vercel, Sentry, GitHub (applied by GitHub Actions)
 ```
 
 ## Verifying your change
