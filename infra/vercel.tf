@@ -21,10 +21,12 @@ resource "vercel_project" "web" {
 }
 
 resource "vercel_project" "api" {
-  name                                 = "${var.project_name}-api"
-  root_directory                       = "apps/api"
-  git_repository                       = local.git_repository
-  serverless_function_region           = var.vercel_function_region
+  name           = "${var.project_name}-api"
+  root_directory = "apps/api"
+  git_repository = local.git_repository
+  resource_config = {
+    function_default_regions = [var.vercel_function_region]
+  }
   preview_deployments_disabled         = true
   enable_affected_projects_deployments = true
 }
