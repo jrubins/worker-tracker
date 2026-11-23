@@ -24,12 +24,13 @@ tokens. Terraform (`infra/`) handles everything else.
 - [x] **Vercel**: [sign up](https://vercel.com/signup) with GitHub, then
       [install the Vercel GitHub app](https://github.com/apps/vercel/installations/new) on
       `jrubins/worker-tracker` only. Both projects were imported in the Vercel dashboard;
-      Terraform still needs their names and project IDs to adopt them
-      instead of creating new ones.
+      Terraform adopts them on the first apply
+      (`infra/imports.tf`): `workout-tracker-web` (`prj_1lKllFNuMm5X7Ot7WO0wE9tvwuur`) and
+      `workout-tracker-api` (`prj_r7PvaUIcIte5YWjrAqQcbophNGVp`).
 - [ ] **Neon**: [sign up](https://console.neon.tech/signup). Terraform creates the project.
-- [ ] **Sentry**: [sign up](https://sentry.io/signup/), then copy the **Organization Slug** from
+- [x] **Sentry**: [sign up](https://sentry.io/signup/), then copy the **Organization Slug** from
       [Settings → General Settings](https://sentry.io/settings/) into `sentry_organization` in
-      `infra/terraform.tfvars`.
+      `infra/terraform.tfvars` (done: `jonbox`).
 - [ ] **Credentials**: create each one in section 2 and save it as a
       [repository secret](https://github.com/jrubins/worker-tracker/settings/secrets/actions).
 - [ ] **Repository variables**
