@@ -1,7 +1,7 @@
 # Infrastructure (Terraform)
 
 Everything the app runs on, as code. GitHub Actions runs it
-(`.github/workflows/infra.yml`), and the state lives in HCP Terraform.
+(`.github/workflows/infra.yml`), and the state lives in a Cloudflare R2 bucket.
 
 | File               | Manages                                                                             |
 | ------------------ | ----------------------------------------------------------------------------------- |
@@ -16,7 +16,8 @@ Everything the app runs on, as code. GitHub Actions runs it
 a _write-only_ value.
 
 **Not managed here:** WorkOS. Its Terraform provider can't configure AuthKit yet, so that stays
-a manual checklist in [`docs/manual-setup.md`](../docs/manual-setup.md). Cloudflare comes in when there's a custom domain.
+a manual checklist in [`docs/manual-setup.md`](../docs/manual-setup.md). Cloudflare is used only for
+the state bucket for now; DNS comes in when there's a custom domain.
 
 ## What runs when
 
@@ -43,10 +44,10 @@ and `api_url` in `terraform.tfvars` to the URLs Vercel shows.
 ## Running locally (optional)
 
 ```sh
-terraform login                     # HCP Terraform token
-export TF_CLOUD_ORGANIZATION=... TF_WORKSPACE=...
+export AWS_ENDPOINT_URL_S3=https://<account-id>.r2.cloudflarestorage.com
+export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=...   # R2 API token
 export VERCEL_API_TOKEN=... NEON_API_KEY=... SENTRY_AUTH_TOKEN=... GITHUB_TOKEN=...
-cd infra && terraform init && terraform plan
+cd infra && terraform init -backend-config="bucket=<state bucket>" && terraform plan
 ```
 
 ## Changing things

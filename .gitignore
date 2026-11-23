@@ -19,7 +19,7 @@ apps/e2e/screenshots/
 !.env.example
 .env.keys
 
-# Terraform: providers and local state/plans (state lives in HCP Terraform)
+# Terraform: providers and local state/plans (state lives in Cloudflare R2)
 .terraform/
 *.tfplan
 tfplan
