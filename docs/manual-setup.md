@@ -25,7 +25,7 @@ tokens. Terraform (`infra/`) handles everything else.
       [install the Vercel GitHub app](https://github.com/apps/vercel/installations/new) on
       `jrubins/worker-tracker` only. Both projects were imported in the Vercel dashboard;
       Terraform still needs their names and project IDs to adopt them
-      instead of creating new ones. f`).
+      instead of creating new ones.
 - [ ] **Neon**: [sign up](https://console.neon.tech/signup). Terraform creates the project.
 - [ ] **Sentry**: [sign up](https://sentry.io/signup/), then copy the **Organization Slug** from
       [Settings → General Settings](https://sentry.io/settings/) into `sentry_organization` in
