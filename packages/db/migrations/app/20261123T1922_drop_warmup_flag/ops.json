@@ -1,0 +1,88 @@
+[
+  {
+    "id": "dropColumn.WorkoutSet.warmup",
+    "label": "Drop column \"warmup\" from \"WorkoutSet\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "warmup",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"warmup\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "warmup"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"warmup\" on \"WorkoutSet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop column \"warmup\"",
+        "sql": "ALTER TABLE \"public\".\"WorkoutSet\" DROP COLUMN \"warmup\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"warmup\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "warmup"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"warmup\" on \"WorkoutSet\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "setDefault.WorkoutSet.setType",
+    "label": "Set default on \"WorkoutSet\".\"setType\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "setType",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"setType\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "setType"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"setType\" on \"WorkoutSet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "set default on \"setType\"",
+        "sql": "ALTER TABLE \"public\".\"WorkoutSet\" ALTER COLUMN \"setType\" SET DEFAULT 'working'"
+      }
+    ],
+    "postcheck": []
+  }
+]

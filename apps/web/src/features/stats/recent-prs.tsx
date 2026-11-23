@@ -35,8 +35,7 @@ export function RecentPrs({ prs }: { prs: readonly RecentPr[] }) {
               {pr.exerciseName}
             </Link>
             <span className="text-muted-foreground text-xs">
-              {formatSet({ weightLb: pr.weightLb, reps: pr.reps, rpe: null })} ·{' '}
-              {formatDate(pr.date)}
+              {formatSet({ ...pr, rpe: null })} · {formatDate(pr.date)}
             </span>
           </div>
           <div className="text-right">

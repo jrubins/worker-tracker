@@ -1,27 +1,47 @@
 import { z } from 'zod';
 import { LocalDateSchema } from './common.ts';
-import { ExerciseSchema } from './exercises.ts';
+import { ExerciseSchema, LoadTypeSchema } from './exercises.ts';
 import { WorkoutSetSchema } from './sets.ts';
 
 /** A single best set, with when it happened. */
 export const RecordSetSchema = z.object({
-  weightLb: z.number(),
+  /** As logged (per dumbbell for per_hand, added load for bodyweight_plus; null = none). */
+  weightLb: z.number().nullable(),
   reps: z.number().int(),
-  e1rmLb: z.number(),
+  /** Null when the set has no estimate (e.g. bodyweight_plus before bodyweight is known). */
+  e1rmLb: z.number().nullable(),
   date: LocalDateSchema,
   workoutId: z.number().int(),
 });
 export type RecordSet = z.infer<typeof RecordSetSchema>;
 
+/** The longest timed set (holds, carries). */
+export const LongestHoldSchema = z.object({
+  durationSeconds: z.number().int(),
+  weightLb: z.number().nullable(),
+  date: LocalDateSchema,
+  workoutId: z.number().int(),
+});
+export type LongestHold = z.infer<typeof LongestHoldSchema>;
+
+/**
+ * Records count working sets only: warm-ups and drop sets never set one. For bodyweight_plus
+ * exercises, weights are the added load ("+10 lb"), and the estimated 1RM needs a known
+ * bodyweight.
+ */
 export const PersonalRecordsSchema = z.object({
   exerciseId: z.number().int(),
   exerciseName: z.string(),
+  loadType: LoadTypeSchema,
   /** Highest estimated one-rep max. */
   bestE1rm: RecordSetSchema.nullable(),
-  /** Heaviest working set. */
+  /** Heaviest working set (most reps breaks a tie). */
   heaviest: RecordSetSchema.nullable(),
+  /** Most reps in one working set (heavier breaks a tie). */
+  mostReps: RecordSetSchema.nullable(),
   /** Heaviest weight for each rep count (1-12), lowest reps first. */
   repMaxes: z.array(RecordSetSchema),
+  longestHold: LongestHoldSchema.nullable(),
 });
 export type PersonalRecords = z.infer<typeof PersonalRecordsSchema>;
 
@@ -72,6 +92,8 @@ export type WeeklySummary = z.infer<typeof WeeklySummarySchema>;
 
 /** A set that beat the previous best estimated one-rep max for its exercise. */
 export const RecentPrSchema = RecordSetSchema.extend({
+  e1rmLb: z.number(),
+  loadType: LoadTypeSchema,
   exerciseId: z.number().int(),
   exerciseName: z.string(),
   previousBestE1rmLb: z.number().nullable(),

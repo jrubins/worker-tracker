@@ -10,6 +10,7 @@ import {
   RoutineSchema,
   SaveRoutineResultSchema,
   WeeklySummarySchema,
+  WorkoutSchema,
 } from '@app/shared';
 import express from 'express';
 import { pino } from 'pino';
@@ -69,6 +70,7 @@ describe('MCP tools', () => {
         'add_sets',
         'review_new_exercises',
         'merge_exercises',
+        'update_workout',
       ]),
     );
     expect(client.getInstructions()).toContain('review_new_exercises');
@@ -142,6 +144,66 @@ describe('MCP tools', () => {
       await call(client, 'get_weekly_summary', { weeks: 1 }),
     );
     expect(weekly.weeks[0]?.sessions).toBe(1);
+    await client.close();
+  });
+
+  it('logs drop and timed sets, sets load types and links, and adds bodyweight', async () => {
+    const client = await connect();
+    const { workout, newExercises } = LogResultSchema.parse(
+      await call(client, 'log_workout', {
+        date: '2026-11-12',
+        exercises: [
+          {
+            exercise: 'Hammer Curl',
+            sets: [
+              { weightLb: 30, reps: 10, warmup: true },
+              { weightLb: 35, reps: 9 },
+              { weightLb: 20, reps: 4, setType: 'drop' },
+            ],
+          },
+          { exercise: 'Weighted Pull-up', sets: [{ weightLb: 10, reps: 6 }] },
+          { exercise: 'Core Video', sets: [{ durationSeconds: 300 }] },
+        ],
+      }),
+    );
+    expect(workout.sets.map((s) => s.setType)).toEqual([
+      'warmup',
+      'working',
+      'drop',
+      'working',
+      'working',
+    ]);
+
+    // Names met while logging start as `total`; fix them during review.
+    const ids = Object.fromEntries(newExercises.map((n) => [n.exercise.name, n.exercise.id]));
+    const curl = ExerciseSchema.parse(
+      await call(client, 'update_exercise', {
+        exerciseId: ids['Hammer Curl'],
+        changes: {
+          loadType: 'per_hand',
+          links: [{ url: 'https://www.youtube.com/watch?v=hammer', label: 'Form' }],
+        },
+      }),
+    );
+    expect(curl.links).toEqual([{ url: 'https://www.youtube.com/watch?v=hammer', label: 'Form' }]);
+    await call(client, 'update_exercise', {
+      exerciseId: ids['Weighted Pull-up'],
+      changes: { loadType: 'bodyweight_plus' },
+    });
+
+    const updated = WorkoutSchema.parse(
+      await call(client, 'update_workout', {
+        workoutId: workout.id,
+        changes: { bodyweightLb: 180 },
+      }),
+    );
+    expect(updated.sets.map((s) => [s.exerciseName, s.volumeLb, s.loadLb])).toEqual([
+      ['Hammer Curl', 0, 30],
+      ['Hammer Curl', 630, 35],
+      ['Hammer Curl', 160, 20],
+      ['Weighted Pull-up', 1140, 190],
+      ['Core Video', 0, null],
+    ]);
     await client.close();
   });
 

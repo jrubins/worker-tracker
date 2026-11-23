@@ -1,4 +1,4 @@
-import type { UpdateSet, WorkoutSet } from '@app/shared';
+import { SET_TYPES, type SetType, type UpdateSet, type WorkoutSet } from '@app/shared';
 import { useForm } from '@tanstack/react-form';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -10,63 +10,92 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatNumber, formatSet } from '@/lib/format';
 
+const wholeNumber = z.string().regex(/^(\d+)?$/, 'A whole number');
+
 /** The form edits text; it becomes an UpdateSet on save. */
-const SetFormSchema = z.object({
-  weight: z.string().regex(/^(\d+(\.\d+)?)?$/, 'A number, or empty for bodyweight'),
-  reps: z.string().regex(/^\d+$/, 'A whole number'),
-  rpe: z
-    .string()
-    .refine((v) => v === '' || (Number(v) >= 1 && Number(v) <= 10 && (Number(v) * 2) % 1 === 0), {
-      message: '1 to 10, in half steps',
-    }),
-  warmup: z.boolean(),
-});
+const SetFormSchema = z
+  .object({
+    weight: z.string().regex(/^(\d+(\.\d+)?)?$/, 'A number, or empty for none'),
+    reps: wholeNumber,
+    seconds: wholeNumber,
+    rpe: z
+      .string()
+      .refine((v) => v === '' || (Number(v) >= 1 && Number(v) <= 10 && (Number(v) * 2) % 1 === 0), {
+        message: '1 to 10, in half steps',
+      }),
+    setType: z.enum(SET_TYPES),
+  })
+  .refine((v) => v.reps !== '' || (v.seconds !== '' && Number(v.seconds) > 0), {
+    message: 'Give reps, a time, or both',
+    path: ['reps'],
+  });
+
+const SET_TYPE_LABELS: Record<SetType, string> = {
+  working: 'Working',
+  warmup: 'Warm-up',
+  drop: 'Drop set',
+};
+
+const weightLabel = (loadType: WorkoutSet['loadType']) =>
+  loadType === 'per_hand'
+    ? 'Weight per hand (lb)'
+    : loadType === 'bodyweight_plus'
+      ? 'Added weight (lb)'
+      : 'Weight (lb)';
 
 interface SetEditorProps {
   set: WorkoutSet;
-  /** 1-based number of the set within its exercise. */
-  number: number;
+  /** How the set is named for screen readers and buttons: "set 2", "drop set after set 3". */
+  label: string;
+  /** Shown in the margin: the set's number, or ↳ for a drop set. */
+  marker: string;
   onSave: (changes: UpdateSet) => Promise<unknown>;
   onDelete: () => Promise<unknown>;
 }
 
 /** One logged set: shown as text, with inline editing to fix mistakes. */
-export function SetEditor({ set, number, onSave, onDelete }: SetEditorProps) {
+export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorProps) {
   const [editing, setEditing] = useState(false);
   const form = useForm({
     defaultValues: {
       weight: set.weightLb === null ? '' : String(set.weightLb),
-      reps: String(set.reps),
+      reps: set.reps === null ? '' : String(set.reps),
+      seconds: set.durationSeconds === null ? '' : String(set.durationSeconds),
       rpe: set.rpe === null ? '' : String(set.rpe),
-      warmup: set.warmup,
+      setType: set.setType,
     },
     validators: { onSubmit: SetFormSchema },
     onSubmit: async ({ value }) => {
       await onSave({
         weightLb: value.weight === '' ? null : Number(value.weight),
-        reps: Number(value.reps),
+        reps: value.reps === '' ? null : Number(value.reps),
+        durationSeconds: value.seconds === '' ? null : Number(value.seconds),
         rpe: value.rpe === '' ? null : Number(value.rpe),
-        warmup: value.warmup,
+        setType: value.setType,
       });
       setEditing(false);
     },
   });
+  const muted = set.setType !== 'working';
 
   if (!editing) {
     return (
-      <div className="flex items-center gap-3 py-2">
-        <span className="text-muted-foreground w-5 text-center text-xs font-semibold tabular-nums">
-          {number}
+      <div className={cn('flex items-center gap-3 py-2', set.setType === 'drop' && 'pl-4')}>
+        <span
+          aria-hidden
+          className="text-muted-foreground w-5 text-center text-xs font-semibold tabular-nums"
+        >
+          {marker}
         </span>
         <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-          <span className={cn('font-medium tabular-nums', set.warmup && 'text-muted-foreground')}>
+          <span className={cn('font-medium tabular-nums', muted && 'text-muted-foreground')}>
             {formatSet(set)}
           </span>
-          {set.warmup ? (
+          {set.setType === 'working' ? null : (
             <Badge variant="outline" className="text-muted-foreground">
-              Warm-up
+              {SET_TYPE_LABELS[set.setType]}
             </Badge>
-          ) : null}
+          )}
           {set.notes ? <span className="text-muted-foreground text-sm">{set.notes}</span> : null}
         </span>
         {set.e1rmLb === null ? null : (
@@ -79,7 +108,7 @@ export function SetEditor({ set, number, onSave, onDelete }: SetEditorProps) {
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-foreground size-8"
-            aria-label={`Edit set ${number}`}
+            aria-label={`Edit ${label}`}
             onClick={() => setEditing(true)}
           >
             <Pencil />
@@ -88,7 +117,7 @@ export function SetEditor({ set, number, onSave, onDelete }: SetEditorProps) {
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-destructive size-8"
-            aria-label={`Delete set ${number}`}
+            aria-label={`Delete ${label}`}
             onClick={() => void onDelete()}
           >
             <Trash2 />
@@ -98,14 +127,14 @@ export function SetEditor({ set, number, onSave, onDelete }: SetEditorProps) {
     );
   }
 
-  const field = (name: 'weight' | 'reps' | 'rpe', label: string) => (
+  const field = (name: 'weight' | 'reps' | 'seconds' | 'rpe', fieldLabel: string) => (
     <form.Field name={name}>
       {(f) => {
         const error = f.state.meta.errors[0]?.message;
         const id = `set-${set.id}-${name}`;
         return (
-          <div className="w-28 space-y-1">
-            <Label htmlFor={id}>{label}</Label>
+          <div className="w-32 space-y-1">
+            <Label htmlFor={id}>{fieldLabel}</Label>
             <Input
               id={id}
               inputMode="decimal"
@@ -128,28 +157,41 @@ export function SetEditor({ set, number, onSave, onDelete }: SetEditorProps) {
   return (
     <form
       className="flex flex-wrap items-end gap-3 py-2"
-      aria-label={`Edit set ${number}`}
+      aria-label={`Edit ${label}`}
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
         void form.handleSubmit();
       }}
     >
-      {field('weight', 'Weight (lb)')}
+      {field('weight', weightLabel(set.loadType))}
       {field('reps', 'Reps')}
+      {field('seconds', 'Time (seconds)')}
       {field('rpe', 'RPE')}
-      <form.Field name="warmup">
-        {(f) => (
-          <label className="flex items-center gap-2 pb-2 text-sm">
-            <input
-              type="checkbox"
-              className="accent-primary size-4"
-              checked={f.state.value}
-              onChange={(event) => f.handleChange(event.target.checked)}
-            />
-            Warm-up
-          </label>
-        )}
+      <form.Field name="setType">
+        {(f) => {
+          const id = `set-${set.id}-type`;
+          return (
+            <div className="w-32 space-y-1">
+              <Label htmlFor={id}>Set type</Label>
+              <select
+                id={id}
+                className="border-input bg-background focus-visible:ring-ring/50 h-9 w-full rounded-md border px-2 text-sm outline-none focus-visible:ring-[3px]"
+                value={f.state.value}
+                onChange={(event) => {
+                  const value = SET_TYPES.find((type) => type === event.target.value);
+                  if (value) f.handleChange(value);
+                }}
+              >
+                {SET_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {SET_TYPE_LABELS[type]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        }}
       </form.Field>
       <div className="flex gap-2 pb-0.5">
         <form.Subscribe selector={(state) => state.isSubmitting}>

@@ -32,6 +32,42 @@
   "domain": {
     "namespaces": {
       "public": {
+        "enum": {
+          "LoadType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "total",
+                "value": "total"
+              },
+              {
+                "name": "per_hand",
+                "value": "per_hand"
+              },
+              {
+                "name": "bodyweight_plus",
+                "value": "bodyweight_plus"
+              }
+            ]
+          },
+          "SetType": {
+            "codecId": "pg/text@1",
+            "members": [
+              {
+                "name": "working",
+                "value": "working"
+              },
+              {
+                "name": "warmup",
+                "value": "warmup"
+              },
+              {
+                "name": "drop",
+                "value": "drop"
+              }
+            ]
+          }
+        },
         "models": {
           "Exercise": {
             "fields": {
@@ -74,6 +110,32 @@
                 "type": {
                   "codecId": "pg/int4@1",
                   "kind": "scalar"
+                }
+              },
+              "links": {
+                "many": {
+                  "elementNullable": false
+                },
+                "nullable": false,
+                "type": {
+                  "entityKind": "valueObject",
+                  "entityName": "ExerciseLink",
+                  "kind": "valueObject",
+                  "namespaceId": "public",
+                  "plane": "storage"
+                }
+              },
+              "loadType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "LoadType",
+                  "namespaceId": "public",
+                  "plane": "domain"
                 }
               },
               "name": {
@@ -163,6 +225,12 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "links": {
+                  "column": "links"
+                },
+                "loadType": {
+                  "column": "loadType"
                 },
                 "name": {
                   "column": "name"
@@ -548,6 +616,17 @@
           },
           "Workout": {
             "fields": {
+              "bodyweightLb": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 5,
+                    "scale": 1
+                  }
+                }
+              },
               "createdAt": {
                 "nullable": false,
                 "type": {
@@ -656,6 +735,9 @@
             },
             "storage": {
               "fields": {
+                "bodyweightLb": {
+                  "column": "bodyweightLb"
+                },
                 "createdAt": {
                   "column": "createdAt"
                 },
@@ -700,6 +782,13 @@
                   }
                 }
               },
+              "durationSeconds": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "exerciseId": {
                 "nullable": false,
                 "type": {
@@ -729,7 +818,7 @@
                 }
               },
               "reps": {
-                "nullable": false,
+                "nullable": true,
                 "type": {
                   "codecId": "pg/int4@1",
                   "kind": "scalar"
@@ -746,17 +835,23 @@
                   }
                 }
               },
-              "userId": {
+              "setType": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
+                },
+                "valueSet": {
+                  "entityKind": "enum",
+                  "entityName": "SetType",
+                  "namespaceId": "public",
+                  "plane": "domain"
                 }
               },
-              "warmup": {
+              "userId": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/bool@1",
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -818,6 +913,9 @@
                 "createdAt": {
                   "column": "createdAt"
                 },
+                "durationSeconds": {
+                  "column": "durationSeconds"
+                },
                 "exerciseId": {
                   "column": "exerciseId"
                 },
@@ -836,11 +934,11 @@
                 "rpe": {
                   "column": "rpe"
                 },
+                "setType": {
+                  "column": "setType"
+                },
                 "userId": {
                   "column": "userId"
-                },
-                "warmup": {
-                  "column": "warmup"
                 },
                 "weightLb": {
                   "column": "weightLb"
@@ -868,6 +966,16 @@
                   "expression": "array_position(\"aliases\", NULL) IS NULL",
                   "name": "Exercise_aliases_elem_not_null_3676266c",
                   "prefix": "Exercise_aliases_elem_not_null"
+                },
+                {
+                  "expression": "jsonb_path_match(\"links\", 'strict $.type() == \"array\" && !exists($[*] ? (!((@.type() == \"object\" && !exists(@.keyvalue() ? (@.key == \"label\" && !(@.value.type() == \"null\" || (@.value.type() == \"string\")))) && exists(@.keyvalue() ? (@.key == \"url\" && (@.value.type() == \"string\"))) && !exists(@.keyvalue() ? (@.key != \"label\" && @.key != \"url\"))))))') IS TRUE",
+                  "name": "Exercise_links_shape_1941eeb2",
+                  "prefix": "Exercise_links_shape"
+                },
+                {
+                  "expression": "\"loadType\" IN ('total', 'per_hand', 'bodyweight_plus')",
+                  "name": "Exercise_loadType_check_c8470ebe",
+                  "prefix": "Exercise_loadType_check"
                 }
               ],
               "columns": {
@@ -913,6 +1021,26 @@
                     "kind": "function"
                   },
                   "nullable": false
+                },
+                "links": {
+                  "codecId": "pg/jsonb@1",
+                  "dataType": "pg/jsonb",
+                  "nullable": false
+                },
+                "loadType": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "total"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "LoadType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
                 },
                 "name": {
                   "codecId": "pg/text@1",
@@ -1250,6 +1378,15 @@
             },
             "Workout": {
               "columns": {
+                "bodyweightLb": {
+                  "codecId": "pg/numeric@1",
+                  "dataType": "pg/numeric",
+                  "nullable": true,
+                  "typeParams": {
+                    "precision": 5,
+                    "scale": 1
+                  }
+                },
                 "createdAt": {
                   "codecId": "pg/timestamptz-date@1",
                   "dataType": "pg/timestamptz",
@@ -1362,6 +1499,13 @@
               "uniques": []
             },
             "WorkoutSet": {
+              "checks": [
+                {
+                  "expression": "\"setType\" IN ('working', 'warmup', 'drop')",
+                  "name": "WorkoutSet_setType_check_76f77917",
+                  "prefix": "WorkoutSet_setType_check"
+                }
+              ],
               "columns": {
                 "createdAt": {
                   "codecId": "pg/timestamptz-date@1",
@@ -1374,6 +1518,11 @@
                   "typeParams": {
                     "precision": 3
                   }
+                },
+                "durationSeconds": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": true
                 },
                 "exerciseId": {
                   "codecId": "pg/int4@1",
@@ -1402,7 +1551,7 @@
                 "reps": {
                   "codecId": "pg/int4@1",
                   "dataType": "pg/int4",
-                  "nullable": false
+                  "nullable": true
                 },
                 "rpe": {
                   "codecId": "pg/numeric@1",
@@ -1413,18 +1562,24 @@
                     "scale": 1
                   }
                 },
+                "setType": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "working"
+                  },
+                  "nullable": false,
+                  "valueSet": {
+                    "entityKind": "valueSet",
+                    "entityName": "SetType",
+                    "namespaceId": "public",
+                    "plane": "storage"
+                  }
+                },
                 "userId": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
-                  "nullable": false
-                },
-                "warmup": {
-                  "codecId": "pg/bool@1",
-                  "dataType": "pg/bool",
-                  "default": {
-                    "kind": "literal",
-                    "value": false
-                  },
                   "nullable": false
                 },
                 "weightLb": {
@@ -1518,13 +1673,51 @@
               },
               "uniques": []
             }
+          },
+          "valueObject": {
+            "ExerciseLink": {
+              "fields": {
+                "label": {
+                  "nullable": true,
+                  "type": {
+                    "codecId": "pg/text@1",
+                    "kind": "scalar"
+                  }
+                },
+                "url": {
+                  "nullable": false,
+                  "type": {
+                    "codecId": "pg/text@1",
+                    "kind": "scalar"
+                  }
+                }
+              }
+            }
+          },
+          "valueSet": {
+            "LoadType": {
+              "kind": "valueSet",
+              "values": [
+                "total",
+                "per_hand",
+                "bodyweight_plus"
+              ]
+            },
+            "SetType": {
+              "kind": "valueSet",
+              "values": [
+                "working",
+                "warmup",
+                "drop"
+              ]
+            }
           }
         },
         "id": "public",
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "a225b048d35036ac5d28668261ba5179dbca739648005a3a4e18b9a031e7580f"
+    "storageHash": "64f6dcd3989ce9826c6f550caa8feb24f206df30f865b90e1af2ad13766683ed"
   },
   "execution": {
     "executionHash": "4675ad76b62c474cbc7fabbeb9f99c69c7a51e55ae5a203b5c19bc352510dbd3",

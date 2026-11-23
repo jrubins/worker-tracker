@@ -38,13 +38,15 @@ describe('logging a workout', () => {
 
     expect(workout.date).toBe('2026-11-20');
     expect(workout.notes).toBe('Felt strong');
-    expect(workout.sets.map((s) => [s.exerciseName, s.weightLb, s.reps, s.rpe, s.warmup])).toEqual([
-      ['Bench Press', 135, 10, null, true],
-      ['Bench Press', 225, 5, 8, false],
-      ['Bench Press', 225, 5, 9, false], // RIR 1 → RPE 9
-      ['Pull-ups', null, 10, null, false],
-      ['Pull-ups', 25, 6, 9, false],
-    ]);
+    expect(workout.sets.map((s) => [s.exerciseName, s.weightLb, s.reps, s.rpe, s.setType])).toEqual(
+      [
+        ['Bench Press', 135, 10, null, 'warmup'], // warmup: true is shorthand
+        ['Bench Press', 225, 5, 8, 'working'],
+        ['Bench Press', 225, 5, 9, 'working'], // RIR 1 → RPE 9
+        ['Pull-ups', null, 10, null, 'working'],
+        ['Pull-ups', 25, 6, 9, 'working'],
+      ],
+    );
     expect(workout.sets[1]?.e1rmLb).toBe(262.5);
     expect(workout.sets[0]?.e1rmLb).toBeNull(); // warm-ups don't count
     // A new user knows no exercises yet: both were created, unconfirmed.

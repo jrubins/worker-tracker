@@ -11,3 +11,5 @@ type Story = StoryObj<typeof meta>;
 
 export const EightSessions: Story = { args: { points: sampleProgress } };
 export const NotEnoughData: Story = { args: { points: sampleProgress.slice(0, 1) } };
+/** A new exercise, or pull-ups before a bodyweight is logged: no estimates at all. */
+export const NoEstimates: Story = { args: { points: [] } };

@@ -20,10 +20,11 @@ import type {
   NamespaceId,
   ProfileHashBase,
   StorageHashBase,
+  ValueObjectTypesFromStorage,
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'a225b048d35036ac5d28668261ba5179dbca739648005a3a4e18b9a031e7580f'>;
+  StorageHashBase<'64f6dcd3989ce9826c6f550caa8feb24f206df30f865b90e1af2ad13766683ed'>;
 export type ExecutionHash =
   ExecutionHashBase<'4675ad76b62c474cbc7fabbeb9f99c69c7a51e55ae5a203b5c19bc352510dbd3'>;
 export type ProfileHash =
@@ -274,8 +275,40 @@ type DefaultLiteralValue<CodecId extends string, Encoded> = CodecId extends keyo
     : CodecTypes[CodecId]['json']
   : Encoded;
 type ParameterizedOutputTypeFunctions = PgParameterizedOutputTypes;
-
-type FieldTypeOverrides = {};
+type ValueObjectOutputTypes = ValueObjectTypesFromStorage<
+  ContractBase['storage']['namespaces'],
+  CodecTypes,
+  ParameterizedOutputTypeFunctions,
+  FieldTypeOverrides,
+  'output'
+>;
+type ValueObjectInputTypes = ValueObjectTypesFromStorage<
+  ContractBase['storage']['namespaces'],
+  CodecTypes,
+  ParameterizedOutputTypeFunctions,
+  FieldTypeOverrides,
+  'input'
+>;
+export type ExerciseLinkOutput = ValueObjectOutputTypes['public']['ExerciseLink'];
+export type ExerciseLinkInput = ValueObjectInputTypes['public']['ExerciseLink'];
+type FieldTypeOverrides = {
+  readonly public: {
+    readonly models: {
+      readonly Exercise: {
+        readonly loadType: {
+          readonly output: 'total' | 'per_hand' | 'bodyweight_plus';
+          readonly input: 'total' | 'per_hand' | 'bodyweight_plus';
+        };
+      };
+      readonly WorkoutSet: {
+        readonly setType: {
+          readonly output: 'working' | 'warmup' | 'drop';
+          readonly input: 'working' | 'warmup' | 'drop';
+        };
+      };
+    };
+  };
+};
 export type FieldOutputTypes = FieldTypesFromDomain<
   ContractBase['domain']['namespaces'],
   CodecTypes,
@@ -292,7 +325,22 @@ export type FieldInputTypes = FieldTypesFromDomain<
   'input',
   ContractBase['storage']['namespaces']
 >;
-type ColumnTypeOverrides = {};
+type ColumnTypeOverrides = {
+  readonly public: {
+    readonly Exercise: {
+      readonly loadType: {
+        readonly output: 'total' | 'per_hand' | 'bodyweight_plus';
+        readonly input: 'total' | 'per_hand' | 'bodyweight_plus';
+      };
+    };
+    readonly WorkoutSet: {
+      readonly setType: {
+        readonly output: 'working' | 'warmup' | 'drop';
+        readonly input: 'working' | 'warmup' | 'drop';
+      };
+    };
+  };
+};
 export type StorageColumnTypes = ColumnTypesFromStorage<
   ContractBase['storage'],
   CodecTypes,
@@ -315,6 +363,8 @@ export namespace Models {
     createdAt: FieldOutputTypes['public']['Exercise']['createdAt'];
     equipment: FieldOutputTypes['public']['Exercise']['equipment'];
     id: FieldOutputTypes['public']['Exercise']['id'];
+    links: FieldOutputTypes['public']['Exercise']['links'];
+    loadType: FieldOutputTypes['public']['Exercise']['loadType'];
     name: FieldOutputTypes['public']['Exercise']['name'];
     nameKey: FieldOutputTypes['public']['Exercise']['nameKey'];
     notes: FieldOutputTypes['public']['Exercise']['notes'];
@@ -362,6 +412,7 @@ export namespace Models {
     readonly [RelationKeys]?: 'exercise' | 'routineVersion';
   };
   export type public_Workout = {
+    bodyweightLb: FieldOutputTypes['public']['Workout']['bodyweightLb'];
     createdAt: FieldOutputTypes['public']['Workout']['createdAt'];
     date: FieldOutputTypes['public']['Workout']['date'];
     durationMinutes: FieldOutputTypes['public']['Workout']['durationMinutes'];
@@ -377,14 +428,15 @@ export namespace Models {
   };
   export type public_WorkoutSet = {
     createdAt: FieldOutputTypes['public']['WorkoutSet']['createdAt'];
+    durationSeconds: FieldOutputTypes['public']['WorkoutSet']['durationSeconds'];
     exerciseId: FieldOutputTypes['public']['WorkoutSet']['exerciseId'];
     id: FieldOutputTypes['public']['WorkoutSet']['id'];
     notes: FieldOutputTypes['public']['WorkoutSet']['notes'];
     position: FieldOutputTypes['public']['WorkoutSet']['position'];
     reps: FieldOutputTypes['public']['WorkoutSet']['reps'];
     rpe: FieldOutputTypes['public']['WorkoutSet']['rpe'];
+    setType: FieldOutputTypes['public']['WorkoutSet']['setType'];
     userId: FieldOutputTypes['public']['WorkoutSet']['userId'];
-    warmup: FieldOutputTypes['public']['WorkoutSet']['warmup'];
     weightLb: FieldOutputTypes['public']['WorkoutSet']['weightLb'];
     workoutId: FieldOutputTypes['public']['WorkoutSet']['workoutId'];
     exercise: public_Exercise;
@@ -461,6 +513,22 @@ type ContractBase = Omit<
                   readonly default: {
                     readonly kind: 'function';
                     readonly expression: 'autoincrement()';
+                  };
+                  readonly many: false;
+                };
+                readonly links: {
+                  readonly dataType: 'pg/jsonb';
+                  readonly codecId: 'pg/jsonb@1';
+                  readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly loadType: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'total'>;
                   };
                   readonly many: false;
                 };
@@ -743,6 +811,13 @@ type ContractBase = Omit<
             };
             readonly Workout: {
               columns: {
+                readonly bodyweightLb: {
+                  readonly dataType: 'pg/numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly precision: 5; readonly scale: 1 };
+                  readonly many: false;
+                };
                 readonly createdAt: {
                   readonly dataType: 'pg/timestamptz';
                   readonly codecId: 'pg/timestamptz-date@1';
@@ -847,6 +922,12 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly precision: 3 };
                   readonly many: false;
                 };
+                readonly durationSeconds: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly exerciseId: {
                   readonly dataType: 'pg/int4';
                   readonly codecId: 'pg/int4@1';
@@ -878,7 +959,7 @@ type ContractBase = Omit<
                 readonly reps: {
                   readonly dataType: 'pg/int4';
                   readonly codecId: 'pg/int4@1';
-                  readonly nullable: false;
+                  readonly nullable: true;
                   readonly many: false;
                 };
                 readonly rpe: {
@@ -888,20 +969,20 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly precision: 3; readonly scale: 1 };
                   readonly many: false;
                 };
+                readonly setType: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'working'>;
+                  };
+                  readonly many: false;
+                };
                 readonly userId: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
-                  readonly many: false;
-                };
-                readonly warmup: {
-                  readonly dataType: 'pg/bool';
-                  readonly codecId: 'pg/bool@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
-                  };
                   readonly many: false;
                 };
                 readonly weightLb: {
@@ -968,6 +1049,30 @@ type ContractBase = Omit<
               ];
             };
           };
+          readonly valueSet: {
+            readonly LoadType: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['total', 'per_hand', 'bodyweight_plus'];
+            };
+            readonly SetType: {
+              readonly kind: 'valueSet';
+              readonly values: readonly ['working', 'warmup', 'drop'];
+            };
+          };
+          readonly valueObject: {
+            readonly ExerciseLink: {
+              readonly fields: {
+                readonly label: {
+                  readonly nullable: true;
+                  readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+                };
+                readonly url: {
+                  readonly nullable: false;
+                  readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+                };
+              };
+            };
+          };
         };
       };
     };
@@ -1024,6 +1129,21 @@ type ContractBase = Omit<
               readonly id: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly links: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'valueObject';
+                  readonly plane: 'storage';
+                  readonly namespaceId: 'public';
+                  readonly entityKind: 'valueObject';
+                  readonly entityName: 'ExerciseLink';
+                };
+                readonly many: { readonly elementNullable: false };
+              };
+              readonly loadType: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
               readonly name: {
                 readonly nullable: false;
@@ -1083,6 +1203,8 @@ type ContractBase = Omit<
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly equipment: { readonly column: 'equipment' };
                 readonly id: { readonly column: 'id' };
+                readonly links: { readonly column: 'links' };
+                readonly loadType: { readonly column: 'loadType' };
                 readonly name: { readonly column: 'name' };
                 readonly nameKey: { readonly column: 'nameKey' };
                 readonly notes: { readonly column: 'notes' };
@@ -1324,6 +1446,14 @@ type ContractBase = Omit<
           };
           readonly Workout: {
             readonly fields: {
+              readonly bodyweightLb: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly typeParams: { readonly precision: 5; readonly scale: 1 };
+                };
+              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -1402,6 +1532,7 @@ type ContractBase = Omit<
               readonly table: 'Workout';
               readonly namespaceId: 'public';
               readonly fields: {
+                readonly bodyweightLb: { readonly column: 'bodyweightLb' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly date: { readonly column: 'date' };
                 readonly durationMinutes: { readonly column: 'durationMinutes' };
@@ -1424,6 +1555,10 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly precision: 3 };
                 };
               };
+              readonly durationSeconds: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
               readonly exerciseId: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
@@ -1441,7 +1576,7 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
               readonly reps: {
-                readonly nullable: false;
+                readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
               readonly rpe: {
@@ -1452,13 +1587,13 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly precision: 3; readonly scale: 1 };
                 };
               };
-              readonly userId: {
+              readonly setType: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly warmup: {
+              readonly userId: {
                 readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
               readonly weightLb: {
                 readonly nullable: true;
@@ -1504,19 +1639,50 @@ type ContractBase = Omit<
               readonly namespaceId: 'public';
               readonly fields: {
                 readonly createdAt: { readonly column: 'createdAt' };
+                readonly durationSeconds: { readonly column: 'durationSeconds' };
                 readonly exerciseId: { readonly column: 'exerciseId' };
                 readonly id: { readonly column: 'id' };
                 readonly notes: { readonly column: 'notes' };
                 readonly position: { readonly column: 'position' };
                 readonly reps: { readonly column: 'reps' };
                 readonly rpe: { readonly column: 'rpe' };
+                readonly setType: { readonly column: 'setType' };
                 readonly userId: { readonly column: 'userId' };
-                readonly warmup: { readonly column: 'warmup' };
                 readonly weightLb: { readonly column: 'weightLb' };
                 readonly workoutId: { readonly column: 'workoutId' };
               };
             };
           };
+        };
+        readonly enum: {
+          readonly LoadType: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'total'; readonly value: 'total' },
+              { readonly name: 'per_hand'; readonly value: 'per_hand' },
+              { readonly name: 'bodyweight_plus'; readonly value: 'bodyweight_plus' },
+            ];
+          };
+          readonly SetType: {
+            readonly codecId: 'pg/text@1';
+            readonly members: readonly [
+              { readonly name: 'working'; readonly value: 'working' },
+              { readonly name: 'warmup'; readonly value: 'warmup' },
+              { readonly name: 'drop'; readonly value: 'drop' },
+            ];
+          };
+        };
+        readonly enumMemberTypes?: {
+          readonly LoadType: readonly [
+            { readonly name: 'total'; readonly value: 'total' },
+            { readonly name: 'per_hand'; readonly value: 'per_hand' },
+            { readonly name: 'bodyweight_plus'; readonly value: 'bodyweight_plus' },
+          ];
+          readonly SetType: readonly [
+            { readonly name: 'working'; readonly value: 'working' },
+            { readonly name: 'warmup'; readonly value: 'warmup' },
+            { readonly name: 'drop'; readonly value: 'drop' },
+          ];
         };
       };
     };

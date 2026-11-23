@@ -4,6 +4,7 @@ import { ListX } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state';
 import { formatNumber } from '@/lib/format';
 import { SetEditor } from './set-editor';
+import { labelSets } from './set-labels';
 
 interface ExerciseSetsProps {
   sets: readonly WorkoutSet[];
@@ -25,7 +26,7 @@ export function ExerciseSets({ sets, onSaveSet, onDeleteSet }: ExerciseSetsProps
   return (
     <div className="space-y-4">
       {groups.map((group, index) => {
-        const working = group.sets.filter((set) => !set.warmup);
+        const working = group.sets.filter((set) => set.setType === 'working');
         const best = Math.max(0, ...working.map((set) => set.e1rmLb ?? 0));
         return (
           <section
@@ -55,11 +56,12 @@ export function ExerciseSets({ sets, onSaveSet, onDeleteSet }: ExerciseSetsProps
               </span>
             </header>
             <div className="divide-y px-4">
-              {group.sets.map((set, setIndex) => (
+              {labelSets(group.sets).map(({ set, label, marker }) => (
                 <SetEditor
                   key={set.id}
                   set={set}
-                  number={setIndex + 1}
+                  label={label}
+                  marker={marker}
                   onSave={(changes) => onSaveSet(set.id, changes)}
                   onDelete={() => onDeleteSet(set.id)}
                 />

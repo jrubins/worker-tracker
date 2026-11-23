@@ -12,5 +12,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** Warm-up, working sets, a drop set, and per-hand, bodyweight-plus and timed exercises. */
 export const Session: Story = {};
 export const Empty: Story = { args: { sets: [] } };

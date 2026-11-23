@@ -4,6 +4,8 @@ import type {
   ExerciseDetail,
   ExerciseProgress,
   LastSession,
+  LoadType,
+  LongestHold,
   PersonalRecords,
   RecentPr,
   RecordSet,
@@ -12,7 +14,13 @@ import type {
 } from '@app/shared';
 import { addDays, localDate, weekStart } from '../../lib/training.ts';
 import type { ExercisesService } from '../exercises/exercises.service.ts';
-import { toWorkoutSet, volumeOf } from '../workouts/workouts.service.ts';
+import {
+  bodyweights,
+  countedSets,
+  setExerciseFields,
+  toWorkoutSet,
+  volumeOf,
+} from '../workouts/workouts.service.ts';
 
 /** A set with the date and workout it belongs to. */
 interface DatedSet {
@@ -24,42 +32,73 @@ interface DatedSet {
 const byTime = (a: DatedSet, b: DatedSet) =>
   a.date.localeCompare(b.date) || a.workoutId - b.workoutId || a.set.position - b.set.position;
 
-const asRecord = ({ set, date, workoutId }: DatedSet): RecordSet | null =>
-  set.weightLb !== null && set.e1rmLb !== null
-    ? { weightLb: set.weightLb, reps: set.reps, e1rmLb: set.e1rmLb, date, workoutId }
-    : null;
+const asRecord = ({ set, date, workoutId }: DatedSet): RecordSet => ({
+  weightLb: set.weightLb,
+  reps: set.reps ?? 0,
+  e1rmLb: set.e1rmLb,
+  date,
+  workoutId,
+});
 
-/** Working sets that carry load and reps: the ones records and estimates are based on. */
-const isScored = (entry: DatedSet) => !entry.set.warmup && entry.set.e1rmLb !== null;
+/**
+ * Sets records are based on: working sets with reps, and with a weight unless the exercise is
+ * bodyweight_plus (where no added weight is a bodyweight set). Warm-ups and drops never count.
+ */
+const isScored = ({ set }: DatedSet) =>
+  set.setType === 'working' &&
+  (set.reps ?? 0) >= 1 &&
+  (set.loadType === 'bodyweight_plus' || (set.weightLb ?? 0) > 0);
 
-function recordsOf(exerciseId: number, exerciseName: string, sets: DatedSet[]): PersonalRecords {
+/** Sets with an estimated one-rep max: what estimate-based records and PRs compare. */
+const hasEstimate = (entry: DatedSet) => isScored(entry) && entry.set.e1rmLb !== null;
+
+/** The first entry with the highest score (earliest wins a tie: when the record was set). */
+const bestBy = (entries: DatedSet[], score: (entry: DatedSet) => number) =>
+  entries.reduce<DatedSet | null>(
+    (top, entry) => (!top || score(entry) > score(top) ? entry : top),
+    null,
+  );
+
+function recordsOf(
+  exercise: { id: number; name: string; loadType: LoadType },
+  sets: DatedSet[],
+): PersonalRecords {
   const scored = sets.filter(isScored);
-  const best = (score: (entry: DatedSet) => number) =>
-    scored.reduce<DatedSet | null>(
-      (top, entry) => (!top || score(entry) > score(top) ? entry : top),
-      null,
-    );
-  const bestE1rm = best((e) => e.set.e1rmLb ?? 0);
-  const heaviest = best((e) => (e.set.weightLb ?? 0) * 1000 + e.set.reps);
+  const weight = (e: DatedSet) => e.set.weightLb ?? 0;
+  const reps = (e: DatedSet) => e.set.reps ?? 0;
+  const bestE1rm = bestBy(scored.filter(hasEstimate), (e) => e.set.e1rmLb ?? 0);
+  const heaviest = bestBy(scored, (e) => weight(e) * 10_000 + reps(e));
+  const mostReps = bestBy(scored, (e) => reps(e) * 10_000 + weight(e));
 
   const repMaxes: RecordSet[] = [];
-  for (let reps = 1; reps <= 12; reps++) {
-    const top = scored
-      .filter((e) => e.set.reps === reps)
-      .reduce<DatedSet | null>(
-        (max, e) => (!max || (e.set.weightLb ?? 0) > (max.set.weightLb ?? 0) ? e : max),
-        null,
-      );
-    const record = top && asRecord(top);
-    if (record) repMaxes.push(record);
+  for (let count = 1; count <= 12; count++) {
+    const top = bestBy(
+      scored.filter((e) => reps(e) === count),
+      weight,
+    );
+    if (top) repMaxes.push(asRecord(top));
   }
 
+  const timed = sets.filter((e) => e.set.setType === 'working' && e.set.durationSeconds !== null);
+  const hold = bestBy(timed, (e) => e.set.durationSeconds ?? 0);
+  const longestHold: LongestHold | null = hold
+    ? {
+        durationSeconds: hold.set.durationSeconds ?? 0,
+        weightLb: hold.set.weightLb,
+        date: hold.date,
+        workoutId: hold.workoutId,
+      }
+    : null;
+
   return {
-    exerciseId,
-    exerciseName,
+    exerciseId: exercise.id,
+    exerciseName: exercise.name,
+    loadType: exercise.loadType,
     bestE1rm: bestE1rm && asRecord(bestE1rm),
     heaviest: heaviest && asRecord(heaviest),
+    mostReps: mostReps && asRecord(mostReps),
     repMaxes,
+    longestHold,
   };
 }
 
@@ -72,17 +111,23 @@ export function createStatsService(
     const rows = await db.orm.public.WorkoutSet.where(
       exerciseId === undefined ? { userId } : { userId, exerciseId },
     )
-      .include('exercise', (e) => e.select('name'))
-      .include('workout', (w) => w.select('id', 'date'))
+      .include('exercise', (e) => e.select(...setExerciseFields))
+      .include('workout', (w) => w.select('id', 'date', 'bodyweightLb'))
       .all()
       .toArray();
+    const bodyweightFor = await bodyweights(db.orm, userId);
     return rows
-      .filter((row) => row.workout !== null)
-      .map((row) => ({
-        set: toWorkoutSet(row),
-        date: row.workout?.date ?? '',
-        workoutId: row.workout?.id ?? 0,
-      }))
+      .flatMap((row) =>
+        row.workout
+          ? [
+              {
+                set: toWorkoutSet(row, bodyweightFor(row.workout)),
+                date: row.workout.date,
+                workoutId: row.workout.id,
+              },
+            ]
+          : [],
+      )
       .sort(byTime);
   };
 
@@ -91,18 +136,27 @@ export function createStatsService(
   const service = {
     async records(userId: string, exerciseId: number): Promise<PersonalRecords> {
       const exercise = await deps.exercises.get(userId, exerciseId);
-      return recordsOf(exercise.id, exercise.name, await datedSets(userId, exerciseId));
+      return recordsOf(exercise, await datedSets(userId, exerciseId));
     },
 
-    /** Records for every exercise that has scored sets, by best estimated one-rep max. */
+    /** Records for every exercise with a record, by best estimated one-rep max (none last). */
     async allRecords(userId: string): Promise<PersonalRecords[]> {
       const sets = await datedSets(userId);
       const byExercise = Map.groupBy(sets, (entry) => entry.set.exerciseId);
       return [...byExercise.values()]
         .flatMap((entries) => {
           const first = entries[0];
-          const records = first && recordsOf(first.set.exerciseId, first.set.exerciseName, entries);
-          return records?.bestE1rm ? [records] : [];
+          const records =
+            first &&
+            recordsOf(
+              {
+                id: first.set.exerciseId,
+                name: first.set.exerciseName,
+                loadType: first.set.loadType,
+              },
+              entries,
+            );
+          return records && (records.heaviest || records.longestHold) ? [records] : [];
         })
         .sort((a, b) => (b.bestE1rm?.e1rmLb ?? 0) - (a.bestE1rm?.e1rmLb ?? 0));
     },
@@ -129,17 +183,10 @@ export function createStatsService(
       const sets = (await datedSets(userId, exerciseId)).filter((e) => e.date >= since);
       const sessions = Map.groupBy(sets, (e) => e.workoutId);
       const points = [...sessions.values()].map((entries) => {
-        const working = entries.filter((e) => !e.set.warmup);
-        const top = working.reduce<DatedSet | null>(
-          (max, e) =>
-            !max ||
-            (e.set.weightLb ?? 0) > (max.set.weightLb ?? 0) ||
-            ((e.set.weightLb ?? 0) === (max.set.weightLb ?? 0) && e.set.reps > max.set.reps)
-              ? e
-              : max,
-          null,
-        );
-        const e1rms = working.map((e) => e.set.e1rmLb).filter((v) => v !== null);
+        const scored = entries.filter(isScored);
+        const top = bestBy(scored, (e) => (e.set.weightLb ?? 0) * 10_000 + (e.set.reps ?? 0));
+        const e1rms = scored.map((e) => e.set.e1rmLb).filter((v) => v !== null);
+        const sets = entries.map((e) => e.set);
         const first = entries[0];
         return {
           date: first?.date ?? '',
@@ -147,8 +194,8 @@ export function createStatsService(
           topSetWeightLb: top?.set.weightLb ?? null,
           topSetReps: top?.set.reps ?? null,
           bestE1rmLb: e1rms.length ? Math.max(...e1rms) : null,
-          volumeLb: volumeOf(entries.map((e) => e.set)),
-          workingSets: working.length,
+          volumeLb: volumeOf(sets),
+          workingSets: countedSets(sets),
         };
       });
       return { exerciseId: exercise.id, exerciseName: exercise.name, points };
@@ -171,7 +218,7 @@ export function createStatsService(
         return {
           weekStart: start,
           sessions: workouts.filter((w) => inWeek(w.date)).length,
-          workingSets: weekSets.filter((s) => !s.warmup).length,
+          workingSets: countedSets(weekSets),
           volumeLb: volumeOf(weekSets),
         };
       });
@@ -193,15 +240,16 @@ export function createStatsService(
       const since = addDays(today(), -days);
       const best = new Map<number, number>();
       const prs: RecentPr[] = [];
-      for (const entry of (await datedSets(userId)).filter(isScored)) {
+      for (const entry of (await datedSets(userId)).filter(hasEstimate)) {
         const previous = best.get(entry.set.exerciseId) ?? null;
         const e1rm = entry.set.e1rmLb ?? 0;
         if (previous === null || e1rm > previous) {
           best.set(entry.set.exerciseId, e1rm);
-          const record = asRecord(entry);
-          if (record && entry.date >= since) {
+          if (entry.date >= since) {
             prs.push({
-              ...record,
+              ...asRecord(entry),
+              e1rmLb: e1rm,
+              loadType: entry.set.loadType,
               exerciseId: entry.set.exerciseId,
               exerciseName: entry.set.exerciseName,
               previousBestE1rmLb: previous,

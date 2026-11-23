@@ -123,7 +123,17 @@ Not enforced by tooling, so check yourself:
   (`APP_TIMEZONE`). Use `localDate`, `weekStart`, `addDays` from `apps/api/src/lib/training.ts`;
   never derive dates from UTC timestamps. Weeks start Monday.
 - **Calculations** live in `lib/training.ts` and the stats service: estimated 1RM is Epley
-  (`estimateOneRepMax`); warm-up sets never count toward volume, records or estimates.
+  (`estimateOneRepMax`), and every set's load, volume and estimate come from `setMetrics`.
+- **Set types:** `working` counts toward everything; `warmup` toward nothing; a `drop` set
+  continues the set before it: it adds volume but isn't a set of its own and never sets a
+  record or an estimate. `warmup: true` in input is shorthand for `setType: "warmup"`. A set
+  has reps, `durationSeconds` (planks, carries), or both; timed sets add no volume.
+- **Load types** (per exercise): `total` (the weight is the load), `per_hand` (weight is per
+  dumbbell; volume counts both hands; estimates stay per dumbbell), `bodyweight_plus` (weight
+  is the added load; estimates use bodyweight + added, from the workout's `bodyweightLb` or the
+  nearest logged one, and are null while no bodyweight is known).
+- **Exercise links** (how-to videos, articles) are a JSON list on the exercise; updates
+  replace the whole list, and merging keeps both exercises' links.
 - **Exercise names** go through `exercises.resolve()` / `lookup()` (normalization in
   `lib/exercise-names.ts`), never raw string comparison. Names met while logging create
   _unconfirmed_ exercises with suggestions; names in a saved routine are confirmed. Merging moves

@@ -3,6 +3,8 @@ import { LocalDateSchema, NameSchema } from './common.ts';
 import { NewExerciseNoticeSchema } from './exercises.ts';
 import { ExerciseSetsInputSchema, WorkoutSetSchema } from './sets.ts';
 
+const BodyweightSchema = z.number().min(50).max(1000);
+
 export const WorkoutRoutineRefSchema = z.object({
   routineId: z.number().int(),
   name: z.string(),
@@ -16,6 +18,8 @@ export const WorkoutSchema = z.object({
   routine: WorkoutRoutineRefSchema.nullable(),
   startedAt: z.iso.datetime().nullable(),
   durationMinutes: z.number().int().nullable(),
+  /** Bodyweight logged with this workout. */
+  bodyweightLb: z.number().nullable(),
   notes: z.string().nullable(),
   sets: z.array(WorkoutSetSchema),
 });
@@ -38,10 +42,21 @@ export const LogWorkoutSchema = z.object({
   routine: NameSchema.optional(),
   startedAt: z.iso.datetime({ offset: true }).optional(),
   durationMinutes: z.number().int().min(0).max(600).optional(),
+  /** The user's bodyweight that day: the base load for bodyweight_plus exercises. */
+  bodyweightLb: BodyweightSchema.optional(),
   notes: z.string().trim().max(2000).optional(),
   exercises: z.array(ExerciseSetsInputSchema).default([]),
 });
 export type LogWorkout = z.input<typeof LogWorkoutSchema>;
+
+/** Corrects a workout's own details (its sets have their own tools). */
+export const UpdateWorkoutSchema = z.object({
+  date: LocalDateSchema.optional(),
+  durationMinutes: z.number().int().min(0).max(600).nullable().optional(),
+  bodyweightLb: BodyweightSchema.nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+});
+export type UpdateWorkout = z.input<typeof UpdateWorkoutSchema>;
 
 export const AddSetsSchema = z.object({
   workoutId: z.number().int().positive(),

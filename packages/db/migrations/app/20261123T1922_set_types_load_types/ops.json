@@ -1,0 +1,715 @@
+[
+  {
+    "id": "column.public.Exercise.loadType",
+    "label": "Add column \"loadType\" to \"Exercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "loadType",
+        "table": "Exercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"loadType\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Exercise",
+          "loadType"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"loadType\" on \"Exercise\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"loadType\"",
+        "sql": "ALTER TABLE \"public\".\"Exercise\" ADD COLUMN \"loadType\" text DEFAULT 'total' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"loadType\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Exercise",
+          "loadType"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"loadType\" on \"Exercise\""
+        }
+      },
+      {
+        "description": "verify column \"loadType\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "Exercise",
+          "loadType",
+          "text"
+        ]
+      },
+      {
+        "description": "verify column \"loadType\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "Exercise",
+          "loadType",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Workout.bodyweightLb",
+    "label": "Add column \"bodyweightLb\" to \"Workout\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "bodyweightLb",
+        "table": "Workout"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"bodyweightLb\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Workout",
+          "bodyweightLb"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"bodyweightLb\" on \"Workout\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"bodyweightLb\"",
+        "sql": "ALTER TABLE \"public\".\"Workout\" ADD COLUMN \"bodyweightLb\" numeric(5,1)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"bodyweightLb\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Workout",
+          "bodyweightLb"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"bodyweightLb\" on \"Workout\""
+        }
+      },
+      {
+        "description": "verify column \"bodyweightLb\" has type \"numeric(5,1)\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "Workout",
+          "bodyweightLb",
+          "numeric(5,1)"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.WorkoutSet.durationSeconds",
+    "label": "Add column \"durationSeconds\" to \"WorkoutSet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "durationSeconds",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"durationSeconds\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "durationSeconds"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"durationSeconds\" on \"WorkoutSet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"durationSeconds\"",
+        "sql": "ALTER TABLE \"public\".\"WorkoutSet\" ADD COLUMN \"durationSeconds\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"durationSeconds\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "durationSeconds"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"durationSeconds\" on \"WorkoutSet\""
+        }
+      },
+      {
+        "description": "verify column \"durationSeconds\" has type \"integer\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "durationSeconds",
+          "integer"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.Exercise.links",
+    "label": "Add column \"links\" to \"Exercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "links",
+        "table": "Exercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"links\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Exercise",
+          "links"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"links\" on \"Exercise\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"links\"",
+        "sql": "ALTER TABLE \"public\".\"Exercise\" ADD COLUMN \"links\" jsonb"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"links\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Exercise",
+          "links"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"links\" on \"Exercise\""
+        }
+      },
+      {
+        "description": "verify column \"links\" has type \"jsonb\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "Exercise",
+          "links",
+          "jsonb"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-Exercise-links",
+    "label": "Data transform: backfill-Exercise-links",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "links",
+        "table": "Exercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-Exercise-links has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"Exercise\" WHERE \"links\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-Exercise-links",
+        "sql": "UPDATE \"public\".\"Exercise\" SET \"links\" = $1::jsonb, \"updatedAt\" = $2 WHERE \"links\" IS NULL",
+        "params": [
+          "[]",
+          "2026-11-23T19:22:28.159Z"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-Exercise-links resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"Exercise\" WHERE \"links\" IS NULL LIMIT 1) AS ok",
+        "params": [],
+        "meta": {
+          "requiredColumn": {
+            "table": "Exercise",
+            "column": "links",
+            "reason": "backfillMissedRows"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.Exercise.links",
+    "label": "Set NOT NULL on \"Exercise\".\"links\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "links",
+        "table": "Exercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"links\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "Exercise",
+          "links"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"links\" on \"Exercise\""
+        }
+      },
+      {
+        "description": "ensure no NULL values in \"links\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"Exercise\" WHERE \"links\" IS NULL) AS \"result\"",
+        "params": [],
+        "meta": {
+          "requiredColumn": {
+            "table": "Exercise",
+            "column": "links",
+            "reason": "nullValues"
+          }
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"links\"",
+        "sql": "ALTER TABLE \"public\".\"Exercise\" ALTER COLUMN \"links\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"links\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "Exercise",
+          "links",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.WorkoutSet.setType",
+    "label": "Add column \"setType\" to \"WorkoutSet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "setType",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"setType\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "setType"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"setType\" on \"WorkoutSet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"setType\"",
+        "sql": "ALTER TABLE \"public\".\"WorkoutSet\" ADD COLUMN \"setType\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"setType\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "setType"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"setType\" on \"WorkoutSet\""
+        }
+      },
+      {
+        "description": "verify column \"setType\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "setType",
+          "text"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-WorkoutSet-setType",
+    "label": "Data transform: backfill-WorkoutSet-setType",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "setType",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-WorkoutSet-setType has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"WorkoutSet\" WHERE \"setType\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-WorkoutSet-setType",
+        "sql": "UPDATE \"public\".\"WorkoutSet\" SET \"setType\" = $1 WHERE (\"setType\" IS NULL AND \"warmup\" = $2)",
+        "params": [
+          "warmup",
+          true
+        ]
+      },
+      {
+        "description": "Run backfill-WorkoutSet-setType",
+        "sql": "UPDATE \"public\".\"WorkoutSet\" SET \"setType\" = $1 WHERE \"setType\" IS NULL",
+        "params": [
+          "working"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-WorkoutSet-setType resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"WorkoutSet\" WHERE \"setType\" IS NULL LIMIT 1) AS ok",
+        "params": [],
+        "meta": {
+          "requiredColumn": {
+            "table": "WorkoutSet",
+            "column": "setType",
+            "reason": "backfillMissedRows"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.WorkoutSet.setType",
+    "label": "Set NOT NULL on \"WorkoutSet\".\"setType\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "setType",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"setType\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "setType"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"setType\" on \"WorkoutSet\""
+        }
+      },
+      {
+        "description": "ensure no NULL values in \"setType\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"WorkoutSet\" WHERE \"setType\" IS NULL) AS \"result\"",
+        "params": [],
+        "meta": {
+          "requiredColumn": {
+            "table": "WorkoutSet",
+            "column": "setType",
+            "reason": "nullValues"
+          }
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"setType\"",
+        "sql": "ALTER TABLE \"public\".\"WorkoutSet\" ALTER COLUMN \"setType\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"setType\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "setType",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.dropNotNull.WorkoutSet.reps",
+    "label": "Drop NOT NULL on \"WorkoutSet\".\"reps\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "reps",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"reps\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "reps"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"reps\" on \"WorkoutSet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop NOT NULL on \"reps\"",
+        "sql": "ALTER TABLE \"public\".\"WorkoutSet\" ALTER COLUMN \"reps\" DROP NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"reps\" is nullable",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "reps",
+          "YES"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.Exercise.Exercise_links_shape_1941eeb2",
+    "label": "Add check constraint \"Exercise_links_shape_1941eeb2\" on \"Exercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "Exercise_links_shape_1941eeb2",
+        "table": "Exercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Exercise_links_shape_1941eeb2\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Exercise_links_shape_1941eeb2",
+          "public",
+          "\"public\".\"Exercise\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"Exercise_links_shape_1941eeb2\" on \"Exercise\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"Exercise_links_shape_1941eeb2\"",
+        "sql": "ALTER TABLE \"public\".\"Exercise\" ADD CONSTRAINT \"Exercise_links_shape_1941eeb2\" CHECK (jsonb_path_match(\"links\", 'strict $.type() == \"array\" && !exists($[*] ? (!((@.type() == \"object\" && !exists(@.keyvalue() ? (@.key == \"label\" && !(@.value.type() == \"null\" || (@.value.type() == \"string\")))) && exists(@.keyvalue() ? (@.key == \"url\" && (@.value.type() == \"string\"))) && !exists(@.keyvalue() ? (@.key != \"label\" && @.key != \"url\"))))))') IS TRUE)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify check constraint \"Exercise_links_shape_1941eeb2\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4)) AS \"result\"",
+        "params": [
+          "Exercise_links_shape_1941eeb2",
+          "public",
+          "\"public\".\"Exercise\"",
+          "c"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.Exercise.Exercise_loadType_check_c8470ebe",
+    "label": "Add check constraint \"Exercise_loadType_check_c8470ebe\" on \"Exercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "Exercise_loadType_check_c8470ebe",
+        "table": "Exercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Exercise_loadType_check_c8470ebe\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Exercise_loadType_check_c8470ebe",
+          "public",
+          "\"public\".\"Exercise\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"Exercise_loadType_check_c8470ebe\" on \"Exercise\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"Exercise_loadType_check_c8470ebe\"",
+        "sql": "ALTER TABLE \"public\".\"Exercise\" ADD CONSTRAINT \"Exercise_loadType_check_c8470ebe\" CHECK (\"loadType\" IN ('total', 'per_hand', 'bodyweight_plus'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify check constraint \"Exercise_loadType_check_c8470ebe\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4)) AS \"result\"",
+        "params": [
+          "Exercise_loadType_check_c8470ebe",
+          "public",
+          "\"public\".\"Exercise\"",
+          "c"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.WorkoutSet.WorkoutSet_setType_check_76f77917",
+    "label": "Add check constraint \"WorkoutSet_setType_check_76f77917\" on \"WorkoutSet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "WorkoutSet_setType_check_76f77917",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"WorkoutSet_setType_check_76f77917\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "WorkoutSet_setType_check_76f77917",
+          "public",
+          "\"public\".\"WorkoutSet\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"WorkoutSet_setType_check_76f77917\" on \"WorkoutSet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"WorkoutSet_setType_check_76f77917\"",
+        "sql": "ALTER TABLE \"public\".\"WorkoutSet\" ADD CONSTRAINT \"WorkoutSet_setType_check_76f77917\" CHECK (\"setType\" IN ('working', 'warmup', 'drop'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify check constraint \"WorkoutSet_setType_check_76f77917\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4)) AS \"result\"",
+        "params": [
+          "WorkoutSet_setType_check_76f77917",
+          "public",
+          "\"public\".\"WorkoutSet\"",
+          "c"
+        ]
+      }
+    ]
+  }
+]

@@ -1,4 +1,5 @@
 /** Display helpers. Weights are pounds; dates are calendar dates (YYYY-MM-DD). */
+import type { LoadType } from '@app/shared';
 
 const number = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
 
@@ -7,10 +8,41 @@ export const formatLb = (value: number | null) =>
 
 export const formatNumber = (value: number) => number.format(value);
 
-/** "225 lb × 5 @ RPE 8" */
-export function formatSet(set: { weightLb: number | null; reps: number; rpe: number | null }) {
-  const load = set.weightLb === null ? 'BW' : `${number.format(set.weightLb)} lb`;
-  return `${load} × ${set.reps}${set.rpe === null ? '' : ` @ RPE ${number.format(set.rpe)}`}`;
+/** "45 s", "1:30", "5:00" */
+export function formatDuration(seconds: number) {
+  if (seconds < 60) return `${seconds} s`;
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+/** How a weight reads for its load type: "225 lb", "35 lb ea", "BW + 10 lb", "BW". */
+export function formatLoad(weightLb: number | null, loadType: LoadType = 'total') {
+  if (weightLb === null || (loadType === 'bodyweight_plus' && weightLb === 0)) return 'BW';
+  const lb = `${number.format(weightLb)} lb`;
+  if (loadType === 'per_hand') return `${lb} ea`;
+  if (loadType === 'bodyweight_plus') return `BW + ${lb}`;
+  return lb;
+}
+
+/** "225 lb × 5 @ RPE 8", "35 lb ea × 10", "BW + 10 lb × 6", "1:30", "50 lb ea · 1:00" */
+export function formatSet(set: {
+  weightLb: number | null;
+  reps: number | null;
+  durationSeconds?: number | null;
+  rpe: number | null;
+  loadType?: LoadType;
+}) {
+  const duration = set.durationSeconds ?? null;
+  // A hold with no weight reads as just its time ("1:30"), not "BW · 1:30".
+  const load =
+    set.reps === null && set.weightLb === null ? null : formatLoad(set.weightLb, set.loadType);
+  const amount = [
+    set.reps === null ? null : `× ${set.reps}`,
+    duration === null ? null : formatDuration(duration),
+  ].filter((part) => part !== null);
+  const text = [load, amount.join(' · ')]
+    .filter(Boolean)
+    .join(load && set.reps !== null ? ' ' : ' · ');
+  return `${text}${set.rpe === null ? '' : ` @ RPE ${number.format(set.rpe)}`}`;
 }
 
 /** A calendar date read as local midnight, so it never shifts a day across time zones. */

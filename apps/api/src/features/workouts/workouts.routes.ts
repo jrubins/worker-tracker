@@ -5,6 +5,7 @@ import {
   ListWorkoutsQuerySchema,
   LogWorkoutSchema,
   UpdateSetSchema,
+  UpdateWorkoutSchema,
 } from '@app/shared';
 import { z } from 'zod';
 import { currentUserId } from '../../auth/middleware.ts';
@@ -29,6 +30,13 @@ export function workoutsRouter(workouts: WorkoutsService): Router {
   router.get('/:id', async (req, res) => {
     const { id } = validate(IdParamsSchema, req.params);
     res.json(await workouts.get(currentUserId(req), id));
+  });
+
+  router.patch('/:id', async (req, res) => {
+    const { id } = validate(IdParamsSchema, req.params);
+    res.json(
+      await workouts.updateWorkout(currentUserId(req), id, validate(UpdateWorkoutSchema, req.body)),
+    );
   });
 
   router.post('/:id/sets', async (req, res) => {
