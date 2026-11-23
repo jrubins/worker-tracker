@@ -27,7 +27,8 @@ tokens. Terraform (`infra/`) handles everything else.
       Terraform adopts them on the first apply
       (`infra/imports.tf`): `workout-tracker-web` (`prj_1lKllFNuMm5X7Ot7WO0wE9tvwuur`) and
       `workout-tracker-api` (`prj_r7PvaUIcIte5YWjrAqQcbophNGVp`).
-- [x] **Neon**: [sign up](https://console.neon.tech/signup). Terraform creates the project.
+- [x] **Neon**: [sign up](https://console.neon.tech/signup). Terraform creates the project in
+      organization `org-dawn-boat-78015684` (`neon_org_id` in `infra/terraform.tfvars`).
 - [x] **Sentry**: [sign up](https://sentry.io/signup/), then copy the **Organization Slug** from
       [Settings → General Settings](https://sentry.io/settings/) into `sentry_organization` in
       `infra/terraform.tfvars` (done: `jonbox`).
