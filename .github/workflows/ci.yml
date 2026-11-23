@@ -1,9 +1,10 @@
 name: CI
 
+# Pull requests only: main changes only through pull requests that pass this workflow
+# (see the ruleset in infra/github.tf), so running it again after a merge repeats the work.
 on:
-  push:
-    branches: [main]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
