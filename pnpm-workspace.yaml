@@ -33,6 +33,3 @@ permissions:
     skills: true
   prisma:
     skills: false
-
-minimumReleaseAgeExclude:
-  - '@vercel/nft@1.11.12'
