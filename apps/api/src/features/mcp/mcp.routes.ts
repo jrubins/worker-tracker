@@ -1,7 +1,6 @@
-import type { RequestHandler, Router } from 'express';
+import { Router, type RequestHandler } from 'express';
 import {
   getOAuthProtectedResourceMetadataUrl,
-  mcpAuthMetadataRouter,
   requireBearerAuth,
 } from '@modelcontextprotocol/express';
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
@@ -19,28 +18,52 @@ export interface McpOptions {
   resourceUrl: string;
 }
 
+/** How long a fetched copy of AuthKit's metadata is reused. */
+const METADATA_CACHE_MS = 5 * 60 * 1000;
+
 /**
  * OAuth discovery documents for MCP clients, mounted at the app root:
- * `/.well-known/oauth-protected-resource/<path>` names AuthKit as the authorization server, and
- * `/.well-known/oauth-authorization-server` mirrors AuthKit's metadata for older clients.
+ *
+ * - `/.well-known/oauth-protected-resource/<path>` (RFC 9728) names AuthKit as the
+ *   authorization server for this MCP endpoint. This is what current clients, Claude included,
+ *   read; they then fetch AuthKit's own metadata from AuthKit.
+ * - `/.well-known/oauth-authorization-server` serves AuthKit's metadata for older clients that
+ *   look for it here. It is fetched from AuthKit (and cached), never written by hand, so it
+ *   always matches what AuthKit actually supports (e.g. whether registration is enabled).
  */
-export function mcpMetadataRouter(resourceUrl: string, authkitDomain: string): Router {
+export function mcpMetadataRouter(
+  resourceUrl: string,
+  authkitDomain: string,
+  fetchMetadata: (url: string) => Promise<Response> = fetch,
+): Router {
   const issuer = authkitDomain.replace(/\/$/, '');
-  return mcpAuthMetadataRouter({
-    resourceServerUrl: new URL(resourceUrl),
-    resourceName: 'App MCP server',
-    oauthMetadata: {
-      issuer,
-      authorization_endpoint: `${issuer}/oauth2/authorize`,
-      token_endpoint: `${issuer}/oauth2/token`,
-      registration_endpoint: `${issuer}/oauth2/register`,
-      response_types_supported: ['code'],
-      grant_types_supported: ['authorization_code', 'refresh_token'],
-      code_challenge_methods_supported: ['S256'],
-      token_endpoint_auth_methods_supported: ['none', 'client_secret_post', 'client_secret_basic'],
-      scopes_supported: ['email', 'offline_access', 'openid', 'profile'],
+  const router = Router();
+
+  router.get(
+    new URL(getOAuthProtectedResourceMetadataUrl(new URL(resourceUrl))).pathname,
+    (req, res) => {
+      res.json({
+        resource: resourceUrl,
+        authorization_servers: [issuer],
+        bearer_methods_supported: ['header'],
+        resource_name: 'MCP server',
+      });
     },
+  );
+
+  let cached: { body: unknown; expires: number } | undefined;
+  router.get('/.well-known/oauth-authorization-server', async (req, res) => {
+    if (!cached || cached.expires < Date.now()) {
+      const upstream = await fetchMetadata(`${issuer}/.well-known/oauth-authorization-server`);
+      if (!upstream.ok) {
+        throw new HttpError(502, 'bad_gateway', 'Authorization server metadata is unavailable');
+      }
+      cached = { body: await upstream.json(), expires: Date.now() + METADATA_CACHE_MS };
+    }
+    res.json(cached.body);
   });
+
+  return router;
 }
 
 /**

@@ -2,6 +2,7 @@ import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 import {
+  ApiErrorSchema,
   ExerciseSchema,
   LastSessionSchema,
   LogResultSchema,
@@ -10,8 +11,13 @@ import {
   SaveRoutineResultSchema,
   WeeklySummarySchema,
 } from '@app/shared';
+import express from 'express';
+import { pino } from 'pino';
+import { pinoHttp } from 'pino-http';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { mcpMetadataRouter } from '../src/features/mcp/mcp.routes.ts';
+import { errorHandler } from '../src/middleware/error-handler.ts';
 import { bearer, createTestApp, uniqueUserId } from './helpers.ts';
 
 const AUTHKIT = 'https://example.authkit.app';
@@ -189,5 +195,42 @@ describe('MCP authorization', () => {
 
   it('only accepts POST', async () => {
     await request(app).get('/mcp').expect(405);
+  });
+});
+
+describe('authorization server metadata (for older MCP clients)', () => {
+  const upstream = {
+    issuer: AUTHKIT,
+    authorization_endpoint: `${AUTHKIT}/oauth2/authorize`,
+    token_endpoint: `${AUTHKIT}/oauth2/token`,
+  };
+
+  function appWith(fetchMetadata: (url: string) => Promise<Response>) {
+    const metadataApp = express();
+    metadataApp.use(pinoHttp({ logger: pino({ level: 'silent' }) }));
+    metadataApp.use(mcpMetadataRouter('http://localhost:3000/mcp', AUTHKIT, fetchMetadata));
+    metadataApp.use(errorHandler);
+    return metadataApp;
+  }
+
+  it("passes AuthKit's own metadata through, unchanged and cached", async () => {
+    const requested: string[] = [];
+    const metadataApp = appWith((url) => {
+      requested.push(url);
+      return Promise.resolve(Response.json(upstream));
+    });
+
+    await request(metadataApp).get('/.well-known/oauth-authorization-server').expect(200, upstream);
+    await request(metadataApp).get('/.well-known/oauth-authorization-server').expect(200, upstream);
+
+    expect(requested).toEqual([`${AUTHKIT}/.well-known/oauth-authorization-server`]);
+  });
+
+  it('reports a 502 when AuthKit is unavailable', async () => {
+    const metadataApp = appWith(() => Promise.resolve(new Response('down', { status: 503 })));
+    const res = await request(metadataApp)
+      .get('/.well-known/oauth-authorization-server')
+      .expect(502);
+    expect(ApiErrorSchema.parse(res.body).error.code).toBe('bad_gateway');
   });
 });
