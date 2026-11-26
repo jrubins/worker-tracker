@@ -27,6 +27,7 @@ interface SetRow {
   exerciseId: number;
   position: number;
   setType: string;
+  superset: string | null;
   weightLb: string | null;
   reps: number | null;
   durationSeconds: number | null;
@@ -54,6 +55,7 @@ export const toWorkoutSet = (row: SetRow, bodyweightLb: number | null): WorkoutS
     loadType,
     position: row.position,
     setType,
+    superset: row.superset,
     weightLb,
     reps: row.reps,
     durationSeconds: row.durationSeconds,
@@ -132,6 +134,26 @@ export function createWorkoutsService(
     };
   };
 
+  /**
+   * The superset label for new sets of an exercise. Every set of an exercise in a workout carries
+   * the same label: a given label is applied to the exercise's earlier sets too, and without
+   * one the new sets keep the label the exercise already has in this workout.
+   */
+  const supersetFor = async (
+    orm: Orm,
+    userId: string,
+    workoutId: number,
+    exerciseId: number,
+    given: string | undefined,
+  ): Promise<string | null> => {
+    const earlier = orm.public.WorkoutSet.where({ userId, workoutId, exerciseId });
+    if (given !== undefined) {
+      await earlier.updateAll({ superset: given });
+      return given;
+    }
+    return (await earlier.orderBy((s) => s.position.desc()).first())?.superset ?? null;
+  };
+
   /** Appends sets (resolving exercise names) after the workout's last set. */
   const appendSets = async (
     orm: Orm,
@@ -147,6 +169,7 @@ export function createWorkoutsService(
     for (const group of exercises) {
       const { exercise, notice } = await deps.exercises.resolve(userId, group.exercise, orm);
       if (notice) notices.push(notice);
+      const superset = await supersetFor(orm, userId, workoutId, exercise.id, group.superset);
       // Custom metric (a no-op while Sentry is disabled).
       Sentry.metrics.count('sets.logged', group.sets.length);
       for (const set of group.sets) {
@@ -156,6 +179,7 @@ export function createWorkoutsService(
           exerciseId: exercise.id,
           position: position++,
           setType: setTypeOf(set),
+          superset,
           weightLb: decimal(set.weightLb ?? null),
           reps: set.reps ?? null,
           durationSeconds: set.durationSeconds ?? null,
@@ -253,16 +277,37 @@ export function createWorkoutsService(
       return set;
     },
 
-    /** Corrects a workout's date, duration, bodyweight or notes. */
+    /** Corrects a workout's date, duration, bodyweight or notes, or marks its supersets. */
     async updateWorkout(userId: string, id: number, patch: UpdateWorkout): Promise<Workout> {
-      const updated = await db.orm.public.Workout.where({ id, userId }).update({
-        ...(patch.date !== undefined ? { date: patch.date } : {}),
-        ...(patch.durationMinutes !== undefined ? { durationMinutes: patch.durationMinutes } : {}),
-        ...(patch.bodyweightLb !== undefined ? { bodyweightLb: decimal(patch.bodyweightLb) } : {}),
-        ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
+      return db.transaction(async (tx) => {
+        const { supersets, ...details } = patch;
+        const workout = await tx.orm.public.Workout.where({ id, userId }).first();
+        if (!workout) throw notFound(`Workout ${id} not found`);
+        if (Object.values(details).some((value) => value !== undefined)) {
+          await tx.orm.public.Workout.where({ id, userId }).update({
+            ...(details.date !== undefined ? { date: details.date } : {}),
+            ...(details.durationMinutes !== undefined
+              ? { durationMinutes: details.durationMinutes }
+              : {}),
+            ...(details.bodyweightLb !== undefined
+              ? { bodyweightLb: decimal(details.bodyweightLb) }
+              : {}),
+            ...(details.notes !== undefined ? { notes: details.notes } : {}),
+          });
+        }
+        for (const { exerciseId, superset } of supersets ?? []) {
+          const sets = tx.orm.public.WorkoutSet.where({ userId, workoutId: id, exerciseId });
+          if (!(await sets.first())) {
+            throw new HttpError(
+              400,
+              'validation_error',
+              `Exercise ${exerciseId} has no sets in workout ${id}`,
+            );
+          }
+          await sets.updateAll({ superset });
+        }
+        return load(tx.orm, userId, id);
       });
-      if (!updated) throw notFound(`Workout ${id} not found`);
-      return load(db.orm, userId, id);
     },
 
     async deleteSet(userId: string, setId: number): Promise<void> {

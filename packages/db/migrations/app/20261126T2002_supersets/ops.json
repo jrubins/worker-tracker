@@ -1,0 +1,122 @@
+[
+  {
+    "id": "column.public.RoutineVersionExercise.superset",
+    "label": "Add column \"superset\" to \"RoutineVersionExercise\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "superset",
+        "table": "RoutineVersionExercise"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"superset\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "RoutineVersionExercise",
+          "superset"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"superset\" on \"RoutineVersionExercise\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"superset\"",
+        "sql": "ALTER TABLE \"public\".\"RoutineVersionExercise\" ADD COLUMN \"superset\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"superset\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "RoutineVersionExercise",
+          "superset"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"superset\" on \"RoutineVersionExercise\""
+        }
+      },
+      {
+        "description": "verify column \"superset\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "RoutineVersionExercise",
+          "superset",
+          "text"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.WorkoutSet.superset",
+    "label": "Add column \"superset\" to \"WorkoutSet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "superset",
+        "table": "WorkoutSet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"superset\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "superset"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"superset\" on \"WorkoutSet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"superset\"",
+        "sql": "ALTER TABLE \"public\".\"WorkoutSet\" ADD COLUMN \"superset\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"superset\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "superset"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"superset\" on \"WorkoutSet\""
+        }
+      },
+      {
+        "description": "verify column \"superset\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "WorkoutSet",
+          "superset",
+          "text"
+        ]
+      }
+    ]
+  }
+]

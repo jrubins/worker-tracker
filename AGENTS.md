@@ -134,6 +134,12 @@ Not enforced by tooling, so check yourself:
   nearest logged one, and are null while no bodyweight is known).
 - **Exercise links** (how-to videos, articles) are a JSON list on the exercise; updates
   replace the whole list, and merging keeps both exercises' links.
+- **Supersets** are a label (`superset: "A"`) on a workout's sets and on routine entries:
+  exercises sharing it were done back to back, in rounds. Every set of an exercise in a workout
+  carries the same label (giving one relabels its earlier sets; omitting it inherits), and
+  `update_workout` marks or clears it afterwards. The label affects no calculation; the web
+  groups by it (`groupSets` in `features/workouts/set-blocks.ts`). A changed pairing in a
+  routine is a new version.
 - **Exercise names** go through `exercises.resolve()` / `lookup()` (normalization in
   `lib/exercise-names.ts`), never raw string comparison. Names met while logging create
   _unconfirmed_ exercises with suggestions; names in a saved routine are confirmed. Merging moves

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { NameSchema } from './common.ts';
 import { NewExerciseNoticeSchema } from './exercises.ts';
-import { RpeSchema } from './sets.ts';
+import { RpeSchema, SupersetSchema } from './sets.ts';
 
 export const RoutineExerciseInputSchema = z.object({
   exercise: NameSchema,
@@ -10,6 +10,8 @@ export const RoutineExerciseInputSchema = z.object({
   targetReps: z.string().trim().max(40).optional(),
   targetRpe: RpeSchema.optional(),
   notes: z.string().trim().max(500).optional(),
+  /** Entries with the same label are a superset, done back to back in rounds. */
+  superset: SupersetSchema.optional(),
 });
 
 export const SaveRoutineSchema = z.object({
@@ -31,6 +33,7 @@ export const RoutineExerciseSchema = z.object({
   targetReps: z.string().nullable(),
   targetRpe: z.number().nullable(),
   notes: z.string().nullable(),
+  superset: z.string().nullable(),
 });
 
 export const RoutineVersionSchema = z.object({

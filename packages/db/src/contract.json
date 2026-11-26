@@ -523,6 +523,13 @@
                   "kind": "scalar"
                 }
               },
+              "superset": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "targetReps": {
                 "nullable": true,
                 "type": {
@@ -599,6 +606,9 @@
                 },
                 "routineVersionId": {
                   "column": "routineVersionId"
+                },
+                "superset": {
+                  "column": "superset"
                 },
                 "targetReps": {
                   "column": "targetReps"
@@ -848,6 +858,13 @@
                   "plane": "domain"
                 }
               },
+              "superset": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "userId": {
                 "nullable": false,
                 "type": {
@@ -936,6 +953,9 @@
                 },
                 "setType": {
                   "column": "setType"
+                },
+                "superset": {
+                  "column": "superset"
                 },
                 "userId": {
                   "column": "userId"
@@ -1289,6 +1309,11 @@
                   "dataType": "pg/int4",
                   "nullable": false
                 },
+                "superset": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
                 "targetReps": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
@@ -1577,6 +1602,11 @@
                     "plane": "storage"
                   }
                 },
+                "superset": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
                 "userId": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
@@ -1717,7 +1747,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "64f6dcd3989ce9826c6f550caa8feb24f206df30f865b90e1af2ad13766683ed"
+    "storageHash": "528d6b3e4a80dfe9987f1da834073a590bfda000e3801e5b2f235d97dd66f570"
   },
   "execution": {
     "executionHash": "4675ad76b62c474cbc7fabbeb9f99c69c7a51e55ae5a203b5c19bc352510dbd3",

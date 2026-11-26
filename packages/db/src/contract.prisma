@@ -103,6 +103,8 @@ model RoutineVersionExercise {
   targetReps       String?
   targetRpe        Decimal(precision: 3, scale: 1)?
   notes            String?
+  // Superset label ("A", "B"): entries with the same label are done back to back, in rounds.
+  superset         String?
 
   @@index([routineVersionId])
   @@index([exerciseId])
@@ -146,6 +148,9 @@ model WorkoutSet {
   durationSeconds Int?
   rpe        Decimal(precision: 3, scale: 1)?
   setType    SetType                         @default(working)
+  // Superset label ("A", "B"): exercises whose sets share a label in a workout were done back to
+  // back, in rounds. Every set of the exercise in that workout carries it.
+  superset   String?
   notes      String?
   createdAt  DateTime                        @default(now()) @onCreate(now())
 

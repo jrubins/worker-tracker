@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { LocalDateSchema, NameSchema } from './common.ts';
 import { NewExerciseNoticeSchema } from './exercises.ts';
-import { ExerciseSetsInputSchema, WorkoutSetSchema } from './sets.ts';
+import { ExerciseSetsInputSchema, SupersetSchema, WorkoutSetSchema } from './sets.ts';
 
 const BodyweightSchema = z.number().min(50).max(1000);
 
@@ -55,6 +55,19 @@ export const UpdateWorkoutSchema = z.object({
   durationMinutes: z.number().int().min(0).max(600).nullable().optional(),
   bodyweightLb: BodyweightSchema.nullable().optional(),
   notes: z.string().trim().max(2000).nullable().optional(),
+  /**
+   * Marks exercises in this workout as a superset (or clears it with null). Applies to every set
+   * of the exercise in this workout.
+   */
+  supersets: z
+    .array(
+      z.object({
+        exerciseId: z.number().int().positive(),
+        superset: SupersetSchema.nullable(),
+      }),
+    )
+    .min(1)
+    .optional(),
 });
 export type UpdateWorkout = z.input<typeof UpdateWorkoutSchema>;
 

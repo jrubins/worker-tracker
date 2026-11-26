@@ -16,7 +16,9 @@ what you lifted last time and track progress. The web dashboard is for looking b
   1RM is Epley. Sets are working, warm-up (counts toward nothing) or drop (adds volume, but
   isn't a set of its own or a record); timed sets (planks, carries) log a duration. Each
   exercise's load type says how weight reads: total, per hand (one dumbbell; volume counts
-  both) or bodyweight plus added load (estimates use the logged bodyweight).
+  both) or bodyweight plus added load (estimates use the logged bodyweight). Exercises done
+  back to back share a superset label ("A") in workouts and routine plans; it changes no
+  numbers, only how sessions read.
 - **Exercise names:** logging never blocks on an unknown name. It's saved as a new
   _unconfirmed_ exercise with similar existing ones suggested; at the end of the workout Claude
   asks whether to merge it (the name becomes an alias) or keep it.

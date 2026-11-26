@@ -24,7 +24,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'64f6dcd3989ce9826c6f550caa8feb24f206df30f865b90e1af2ad13766683ed'>;
+  StorageHashBase<'528d6b3e4a80dfe9987f1da834073a590bfda000e3801e5b2f235d97dd66f570'>;
 export type ExecutionHash =
   ExecutionHashBase<'4675ad76b62c474cbc7fabbeb9f99c69c7a51e55ae5a203b5c19bc352510dbd3'>;
 export type ProfileHash =
@@ -404,6 +404,7 @@ export namespace Models {
     notes: FieldOutputTypes['public']['RoutineVersionExercise']['notes'];
     position: FieldOutputTypes['public']['RoutineVersionExercise']['position'];
     routineVersionId: FieldOutputTypes['public']['RoutineVersionExercise']['routineVersionId'];
+    superset: FieldOutputTypes['public']['RoutineVersionExercise']['superset'];
     targetReps: FieldOutputTypes['public']['RoutineVersionExercise']['targetReps'];
     targetRpe: FieldOutputTypes['public']['RoutineVersionExercise']['targetRpe'];
     targetSets: FieldOutputTypes['public']['RoutineVersionExercise']['targetSets'];
@@ -436,6 +437,7 @@ export namespace Models {
     reps: FieldOutputTypes['public']['WorkoutSet']['reps'];
     rpe: FieldOutputTypes['public']['WorkoutSet']['rpe'];
     setType: FieldOutputTypes['public']['WorkoutSet']['setType'];
+    superset: FieldOutputTypes['public']['WorkoutSet']['superset'];
     userId: FieldOutputTypes['public']['WorkoutSet']['userId'];
     weightLb: FieldOutputTypes['public']['WorkoutSet']['weightLb'];
     workoutId: FieldOutputTypes['public']['WorkoutSet']['workoutId'];
@@ -746,6 +748,12 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly many: false;
                 };
+                readonly superset: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly targetReps: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
@@ -977,6 +985,12 @@ type ContractBase = Omit<
                     readonly kind: 'literal';
                     readonly value: DefaultLiteralValue<'pg/text@1', 'working'>;
                   };
+                  readonly many: false;
+                };
+                readonly superset: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
                   readonly many: false;
                 };
                 readonly userId: {
@@ -1386,6 +1400,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
+              readonly superset: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly targetReps: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -1438,6 +1456,7 @@ type ContractBase = Omit<
                 readonly notes: { readonly column: 'notes' };
                 readonly position: { readonly column: 'position' };
                 readonly routineVersionId: { readonly column: 'routineVersionId' };
+                readonly superset: { readonly column: 'superset' };
                 readonly targetReps: { readonly column: 'targetReps' };
                 readonly targetRpe: { readonly column: 'targetRpe' };
                 readonly targetSets: { readonly column: 'targetSets' };
@@ -1591,6 +1610,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly superset: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly userId: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -1647,6 +1670,7 @@ type ContractBase = Omit<
                 readonly reps: { readonly column: 'reps' };
                 readonly rpe: { readonly column: 'rpe' };
                 readonly setType: { readonly column: 'setType' };
+                readonly superset: { readonly column: 'superset' };
                 readonly userId: { readonly column: 'userId' };
                 readonly weightLb: { readonly column: 'weightLb' };
                 readonly workoutId: { readonly column: 'workoutId' };

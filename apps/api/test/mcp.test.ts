@@ -207,6 +207,49 @@ describe('MCP tools', () => {
     await client.close();
   });
 
+  it('logs supersets, plans them in routines and marks them afterwards', async () => {
+    const client = await connect();
+    const saved = SaveRoutineResultSchema.parse(
+      await call(client, 'save_routine', {
+        name: 'Upper',
+        exercises: [
+          { exercise: 'Bench Press', targetSets: 3, superset: 'A' },
+          { exercise: 'Barbell Row', targetSets: 3, superset: 'A' },
+        ],
+      }),
+    );
+    expect(saved.routine.current.exercises.map((e) => e.superset)).toEqual(['A', 'A']);
+
+    const { workout } = LogResultSchema.parse(
+      await call(client, 'log_workout', {
+        routine: 'Upper',
+        exercises: [
+          { exercise: 'Bench Press', superset: 'A', sets: [{ weightLb: 185, reps: 8 }] },
+          { exercise: 'Barbell Row', superset: 'A', sets: [{ weightLb: 135, reps: 10 }] },
+          { exercise: 'Curl', sets: [{ weightLb: 30, reps: 10 }] },
+          { exercise: 'Triceps Pushdown', sets: [{ weightLb: 50, reps: 12 }] },
+        ],
+      }),
+    );
+    expect(workout.sets.map((s) => s.superset)).toEqual(['A', 'A', null, null]);
+
+    // The user mentions the arm work was a superset too.
+    const [curl, pushdown] = [workout.sets[2]?.exerciseId, workout.sets[3]?.exerciseId];
+    const updated = WorkoutSchema.parse(
+      await call(client, 'update_workout', {
+        workoutId: workout.id,
+        changes: {
+          supersets: [
+            { exerciseId: curl, superset: 'B' },
+            { exerciseId: pushdown, superset: 'B' },
+          ],
+        },
+      }),
+    );
+    expect(updated.sets.map((s) => s.superset)).toEqual(['A', 'A', 'B', 'B']);
+    await client.close();
+  });
+
   it('explains unknown exercises with suggestions', async () => {
     const client = await connect();
     await call(client, 'create_exercise', { name: 'Romanian Deadlift' });
