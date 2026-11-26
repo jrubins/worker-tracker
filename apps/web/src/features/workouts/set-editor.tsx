@@ -55,7 +55,8 @@ interface SetEditorProps {
 
 /** One logged set: shown as text, with inline editing to fix mistakes. */
 export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorProps) {
-  const [editing, setEditing] = useState(false);
+  const [mode, setMode] = useState<'view' | 'edit' | 'confirm-delete'>('view');
+  const [deleting, setDeleting] = useState(false);
   const form = useForm({
     defaultValues: {
       weight: set.weightLb === null ? '' : String(set.weightLb),
@@ -73,12 +74,43 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
         rpe: value.rpe === '' ? null : Number(value.rpe),
         setType: value.setType,
       });
-      setEditing(false);
+      setMode('view');
     },
   });
   const muted = set.setType !== 'working';
 
-  if (!editing) {
+  if (mode === 'confirm-delete') {
+    return (
+      <div
+        role="group"
+        aria-label={`Delete ${label}?`}
+        className="border-destructive/40 bg-destructive/10 -mx-2 my-1 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border px-3 py-2"
+      >
+        <span className="text-sm">
+          Delete {label}{' '}
+          <span className="text-muted-foreground tabular-nums">({formatSet(set)})</span>?
+        </span>
+        <span className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setMode('view')}>
+            Keep it
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={deleting}
+            onClick={() => {
+              setDeleting(true);
+              void onDelete().finally(() => setDeleting(false));
+            }}
+          >
+            Delete
+          </Button>
+        </span>
+      </div>
+    );
+  }
+
+  if (mode === 'view') {
     return (
       <div className={cn('flex items-center gap-3 py-2', set.setType === 'drop' && 'pl-4')}>
         <span
@@ -109,7 +141,7 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
             size="icon"
             className="text-muted-foreground hover:text-foreground size-8"
             aria-label={`Edit ${label}`}
-            onClick={() => setEditing(true)}
+            onClick={() => setMode('edit')}
           >
             <Pencil />
           </Button>
@@ -118,7 +150,7 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
             size="icon"
             className="text-muted-foreground hover:text-destructive size-8"
             aria-label={`Delete ${label}`}
-            onClick={() => void onDelete()}
+            onClick={() => setMode('confirm-delete')}
           >
             <Trash2 />
           </Button>
@@ -133,7 +165,7 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
         const error = f.state.meta.errors[0]?.message;
         const id = `set-${set.id}-${name}`;
         return (
-          <div className="w-32 space-y-1">
+          <div className="min-w-0 space-y-1">
             <Label htmlFor={id}>{fieldLabel}</Label>
             <Input
               id={id}
@@ -156,7 +188,7 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
 
   return (
     <form
-      className="flex flex-wrap items-end gap-3 py-2"
+      className="grid grid-cols-2 items-end gap-3 py-3 sm:grid-cols-5"
       aria-label={`Edit ${label}`}
       noValidate
       onSubmit={(event) => {
@@ -164,6 +196,9 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
         void form.handleSubmit();
       }}
     >
+      <p className="text-muted-foreground col-span-full text-xs font-semibold tracking-wide uppercase">
+        Edit {label}
+      </p>
       {field('weight', weightLabel(set.loadType))}
       {field('reps', 'Reps')}
       {field('seconds', 'Time (seconds)')}
@@ -172,7 +207,7 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
         {(f) => {
           const id = `set-${set.id}-type`;
           return (
-            <div className="w-32 space-y-1">
+            <div className="col-span-2 min-w-0 space-y-1 sm:col-span-1">
               <Label htmlFor={id}>Set type</Label>
               <select
                 id={id}
@@ -193,15 +228,21 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
           );
         }}
       </form.Field>
-      <div className="flex gap-2 pb-0.5">
+      <div className="col-span-full flex gap-2 sm:justify-end">
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
-            <Button type="submit" size="sm" disabled={isSubmitting}>
+            <Button type="submit" size="sm" className="flex-1 sm:flex-none" disabled={isSubmitting}>
               {isSubmitting ? 'Saving…' : 'Save'}
             </Button>
           )}
         </form.Subscribe>
-        <Button type="button" size="sm" variant="outline" onClick={() => setEditing(false)}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="flex-1 sm:flex-none"
+          onClick={() => setMode('view')}
+        >
           Cancel
         </Button>
       </div>

@@ -34,26 +34,28 @@ export function ExerciseSets({ sets, onSaveSet, onDeleteSet }: ExerciseSetsProps
             aria-label={group.exerciseName}
             className="bg-card rounded-xl border"
           >
-            <header className="flex items-center gap-3 border-b px-4 py-3">
+            <header className="flex items-start gap-3 border-b px-4 py-3">
               <span
                 aria-hidden
                 className="bg-primary text-primary-foreground font-display flex size-7 shrink-0 items-center justify-center rounded-md text-sm font-semibold"
               >
                 {index + 1}
               </span>
-              <h2 className="min-w-0 flex-1 truncate font-semibold">
-                <Link
-                  to="/exercises/$exerciseId"
-                  params={{ exerciseId: String(group.exerciseId) }}
-                  className="hover:text-primary hover:underline"
-                >
-                  {group.exerciseName}
-                </Link>
-              </h2>
-              <span className="text-muted-foreground text-xs">
-                {working.length} working {working.length === 1 ? 'set' : 'sets'}
-                {best > 0 ? ` · best e1RM ${formatNumber(best)} lb` : ''}
-              </span>
+              <div className="min-w-0 flex-1">
+                <h2 className="font-semibold leading-snug break-words">
+                  <Link
+                    to="/exercises/$exerciseId"
+                    params={{ exerciseId: String(group.exerciseId) }}
+                    className="hover:text-primary hover:underline"
+                  >
+                    {group.exerciseName}
+                  </Link>
+                </h2>
+                <p className="text-muted-foreground text-xs">
+                  {working.length} working {working.length === 1 ? 'set' : 'sets'}
+                  {best > 0 ? ` · best e1RM ${formatNumber(best)} lb` : ''}
+                </p>
+              </div>
             </header>
             <div className="divide-y px-4">
               {labelSets(group.sets).map(({ set, label, marker }) => (

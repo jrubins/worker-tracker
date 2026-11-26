@@ -78,6 +78,7 @@ test('saves reference links on an exercise', async ({ page, api, capture }) => {
   await page.reload();
   await expect(page.getByRole('link', { name: /RDL form/ })).toBeVisible();
   await page.getByRole('button', { name: 'Remove RDL form' }).click();
+  await page.getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(page.getByText('No references yet.')).toBeVisible();
 });
 
@@ -92,4 +93,42 @@ test('shows rep records for weighted bodyweight lifts', async ({ page, api }) =>
     '25 lb',
   );
   await expect(page.getByRole('cell', { name: 'BW + 25 lb' })).toBeVisible();
+});
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('shows long exercise names in full', async ({ page, api, capture }) => {
+    const name = 'Seated Dumbbell Shoulder Press (Neutral Grip)';
+    const logged = (await logWorkout(api, {
+      exercises: [{ exercise: name, sets: [{ weightLb: 40, reps: 8 }] }],
+    })) as { workout: { id: number } };
+
+    await page.goto(`/workouts/${logged.workout.id}`);
+    const heading = page.getByRole('heading', { level: 2, name });
+    await expect(heading).toBeVisible();
+    // Wrapped, not cut off with an ellipsis.
+    expect(await heading.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    await expect(page.getByRole('region', { name }).getByText('1 working set')).toBeVisible();
+    await capture('workout-long-names-mobile');
+  });
+
+  test('uses the full width to edit a set', async ({ page, api, capture }) => {
+    const logged = (await logWorkout(api, {
+      exercises: [{ exercise: 'Bench Press', sets: [{ weightLb: 185, reps: 5 }] }],
+    })) as { workout: { id: number } };
+    await page.goto(`/workouts/${logged.workout.id}`);
+    await page.getByRole('button', { name: 'Edit set 1' }).click();
+
+    const form = page.getByRole('form', { name: 'Edit set 1' });
+    const formWidth = (await form.boundingBox())?.width ?? 0;
+    const weightWidth = (await form.getByLabel('Weight (lb)').boundingBox())?.width ?? 0;
+    // Two fields per row on a phone, each about half the form.
+    expect(weightWidth).toBeGreaterThan(formWidth * 0.4);
+    await capture('set-editor-mobile');
+
+    await form.getByLabel('Reps').fill('6');
+    await form.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByText('185 lb × 6')).toBeVisible();
+  });
 });

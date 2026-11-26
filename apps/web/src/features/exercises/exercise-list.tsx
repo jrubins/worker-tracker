@@ -20,7 +20,7 @@ function ExerciseRow({ exercise }: { exercise: Exercise }) {
         className="bg-card hover:border-primary/40 hover:bg-accent/40 group flex h-full items-center gap-3 rounded-xl border p-4 transition-colors"
       >
         <span className="min-w-0 flex-1 space-y-1.5">
-          <span className="block truncate font-semibold">{exercise.name}</span>
+          <span className="block font-semibold break-words">{exercise.name}</span>
           <span className="flex flex-wrap items-center gap-1.5">
             {exercise.confirmed ? null : (
               <Badge className="bg-highlight/15 text-highlight">New: review with Claude</Badge>

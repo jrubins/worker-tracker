@@ -84,3 +84,19 @@ export const InvalidRpe: Story = {
     await expect(args.onSave).not.toHaveBeenCalled();
   },
 };
+
+/** Deleting asks first; "Keep it" backs out without deleting. */
+export const DeleteAsksFirst: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Delete set 2' }));
+    await expect(args.onDelete).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole('button', { name: 'Keep it' }));
+    await expect(canvas.getByRole('button', { name: 'Edit set 2' })).toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Delete set 2' }));
+    await expect(canvas.getByRole('group', { name: 'Delete set 2?' })).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Delete' }));
+    await expect(args.onDelete).toHaveBeenCalledOnce();
+  },
+};

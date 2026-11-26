@@ -31,7 +31,7 @@ test('history lists workouts and opens one', async ({ page, api, capture }) => {
   await capture('workout');
 });
 
-test('fixes a mistyped set and deletes a set', async ({ page, api }) => {
+test('fixes a mistyped set and deletes a set', async ({ page, api, capture }) => {
   const logged = (await logWorkout(api, session)) as { workout: { id: number } };
   await page.goto(`/workouts/${logged.workout.id}`);
 
@@ -41,7 +41,16 @@ test('fixes a mistyped set and deletes a set', async ({ page, api }) => {
   await page.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByText('230 lb × 5 @ RPE 8')).toBeVisible();
 
+  // Deleting asks first.
   await page.getByRole('button', { name: 'Delete set 1' }).click();
+  await page.getByRole('button', { name: 'Keep it' }).click();
+  await expect(page.getByText('135 lb × 10')).toBeVisible();
+  await page.getByRole('button', { name: 'Delete set 1' }).click();
+  await capture('delete-set-confirm');
+  await page
+    .getByRole('group', { name: 'Delete set 1?' })
+    .getByRole('button', { name: 'Delete' })
+    .click();
   await expect(page.getByText('135 lb × 10')).toHaveCount(0);
 });
 

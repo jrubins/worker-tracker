@@ -105,7 +105,7 @@ export function ExercisePage() {
             <CardDescription>Best estimated 1RM per session, last 12 months.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ProgressChart points={progress.points} />
+            <ProgressChart points={progress.points} loadType={exercise.loadType} />
           </CardContent>
         </Card>
 

@@ -32,6 +32,8 @@ interface ExerciseLinksProps {
 /** An exercise's references (how-to videos, articles): open, add and remove them. */
 export function ExerciseLinks({ links, onChange }: ExerciseLinksProps) {
   const [adding, setAdding] = useState(false);
+  /** The URL of the link waiting for "Remove" to be confirmed. */
+  const [confirming, setConfirming] = useState<string | null>(null);
   const form = useForm({
     defaultValues: { url: '', label: '' },
     validators: { onSubmit: LinkFormSchema },
@@ -50,33 +52,62 @@ export function ExerciseLinks({ links, onChange }: ExerciseLinksProps) {
         </EmptyState>
       ) : (
         <ul className="divide-y">
-          {links.map((link) => (
-            <li key={link.url} className="flex items-center gap-3 py-2">
-              <ExternalLink className="text-muted-foreground size-4 shrink-0" aria-hidden />
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noreferrer"
-                className="min-w-0 flex-1 truncate font-medium hover:underline"
-              >
-                {link.label ?? siteOf(link.url)}
-                {link.label ? (
-                  <span className="text-muted-foreground ml-2 text-xs font-normal">
-                    {siteOf(link.url)}
+          {links.map((link) => {
+            const name = link.label ?? siteOf(link.url);
+            if (confirming === link.url) {
+              return (
+                <li
+                  key={link.url}
+                  aria-label={`Remove ${name}?`}
+                  className="border-destructive/40 bg-destructive/10 -mx-2 my-1 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border px-3 py-2"
+                >
+                  <span className="min-w-0 text-sm break-words">Remove “{name}”?</span>
+                  <span className="ml-auto flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setConfirming(null)}>
+                      Keep it
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setConfirming(null);
+                        void onChange(links.filter((other) => other.url !== link.url));
+                      }}
+                    >
+                      Remove
+                    </Button>
                   </span>
-                ) : null}
-              </a>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-muted-foreground hover:text-destructive size-8"
-                aria-label={`Remove ${link.label ?? siteOf(link.url)}`}
-                onClick={() => void onChange(links.filter((other) => other.url !== link.url))}
-              >
-                <Trash2 />
-              </Button>
-            </li>
-          ))}
+                </li>
+              );
+            }
+            return (
+              <li key={link.url} className="flex items-center gap-3 py-2">
+                <ExternalLink className="text-muted-foreground size-4 shrink-0" aria-hidden />
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="min-w-0 flex-1 truncate font-medium hover:underline"
+                >
+                  {name}
+                  {link.label ? (
+                    <span className="text-muted-foreground ml-2 text-xs font-normal">
+                      {siteOf(link.url)}
+                    </span>
+                  ) : null}
+                </a>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-destructive size-8"
+                  aria-label={`Remove ${name}`}
+                  onClick={() => setConfirming(link.url)}
+                >
+                  <Trash2 />
+                </Button>
+              </li>
+            );
+          })}
         </ul>
       )}
 
