@@ -34,12 +34,13 @@ How sets are read:
 - Bodyweight: pass bodyweightLb to log_workout whenever the user mentions it (or update_workout later). Sessions without one use the nearest logged bodyweight.
 - setType: "working" (default), "warmup" (counts toward nothing; warmup: true is shorthand), or "drop": a drop set continues the set logged just before it (12, 12, 9 then a drop of 3 is three sets). Drops add volume but never set a record or an estimated 1RM.
 - Timed sets (planks, dead hangs, carries, a 5-minute core video) give durationSeconds, with or without reps.
+- Supersets (also tri-sets, giant sets, circuits): exercises done back to back in rounds get the same superset label on their exercise entries: "A" for the first group in a session, "B" for the next. Keep each exercise's sets in its own entry (bench 3 sets + row 3 sets, both superset "A"), not one entry per round. When logging live set by set, the label sticks to the exercise for the rest of the workout. Plans in save_routine label their entries the same way, so get_routine shows the pairing.
 
 Planning a session: call list_routines (the user rotates through them), then get_last_session for the key lifts and get_personal_records to pick weights. Adjust to how the user feels; only call save_routine when they want the plan itself changed (always give a changeNote saying what changed and why).
 
 Logging: log_workout for a whole session (also for importing past sessions with their date), or log_workout with no exercises followed by add_sets to log live. Use exercise names as the user says them; the server resolves names and aliases. When a name is not recognized, the sets are still logged under a new *unconfirmed* exercise and the response lists similar existing exercises: mention it in a short line and keep going. At the end of the workout, call review_new_exercises and ask the user, for each one, whether to merge it into a suggested match (merge_exercises) or keep it (confirm_exercise).
 
-Corrections: get_workout, then update_set / delete_set / update_workout / delete_workout.
+Corrections: get_workout, then update_set / delete_set / update_workout / delete_workout. To mark (or unmark) a superset after the fact, use update_workout with supersets.
 
 Exercises can keep reference links (a how-to video, an article): set them with update_exercise (links replaces the whole list).
 `.trim();
@@ -98,7 +99,7 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     {
       title: 'Save routine',
       description:
-        'Create a routine or save a changed plan as a new version (old versions are kept). Pass the full exercise list. Not for one-day tweaks: those are just what gets logged.',
+        'Create a routine or save a changed plan as a new version (old versions are kept). Pass the full exercise list; entries done as a superset share a `superset` label ("A"). Not for one-day tweaks: those are just what gets logged.',
       inputSchema: SaveRoutineSchema,
     },
     async (input) => json(await routines.save(userId, input)),
@@ -195,7 +196,7 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     {
       title: 'Log workout',
       description:
-        'Log a session: all of it at once, or start one with no exercises and add sets as you go with add_sets. Give `date` to import a past session, and `bodyweightLb` when known. Each set has reps, durationSeconds, or both; setType marks warm-ups and drop sets (a drop follows the set it continues). Weights per dumbbell for per_hand exercises, added load for bodyweight_plus. Unrecognized exercise names come back in `newExercises` with similar matches.',
+        'Log a session: all of it at once, or start one with no exercises and add sets as you go with add_sets. Give `date` to import a past session, and `bodyweightLb` when known. Each set has reps, durationSeconds, or both; setType marks warm-ups and drop sets (a drop follows the set it continues). Exercises done back to back as a superset share a `superset` label ("A") on their entries. Weights per dumbbell for per_hand exercises, added load for bodyweight_plus. Unrecognized exercise names come back in `newExercises` with similar matches.',
       inputSchema: LogWorkoutSchema,
     },
     async (input) => json(await workouts.log(userId, input)),
@@ -206,7 +207,7 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     {
       title: 'Add sets',
       description:
-        'Append sets to a workout (live logging), in the order done: a drop set right after the set it continues. Same set fields as log_workout. Unrecognized names come back in `newExercises`.',
+        "Append sets to a workout (live logging), in the order done: a drop set right after the set it continues. Same fields as log_workout; a `superset` label applies to all of that exercise's sets in the workout, and later sets keep it. Unrecognized names come back in `newExercises`.",
       inputSchema: AddSetsSchema,
     },
     async (input) => json(await workouts.addSets(userId, input)),
@@ -228,7 +229,7 @@ export function createMcpServer(services: McpServices, userId: string): McpServe
     {
       title: 'Fix a workout',
       description:
-        "Correct a session's date, duration, notes, or bodyweight (e.g. add the user's bodyweight to past sessions so pull-up estimates work).",
+        "Correct a session's date, duration, notes, or bodyweight (e.g. add the user's bodyweight to past sessions so pull-up estimates work), or mark exercises as a superset: supersets [{ exerciseId, superset: \"A\" }] (null removes it), applied to all of the exercise's sets in that session.",
       inputSchema: z.object({
         workoutId: z.number().int().positive(),
         changes: UpdateWorkoutSchema,

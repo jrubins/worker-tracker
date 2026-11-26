@@ -61,9 +61,24 @@ export function setTypeOf(set: { setType?: SetType | undefined; warmup?: boolean
   return set.setType ?? (set.warmup ? 'warmup' : 'working');
 }
 
+/**
+ * A superset label: exercises with the same label in one workout (or routine) are done back to
+ * back, in rounds. "A", "B", ...; lowercase is accepted.
+ */
+export const SupersetSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^[A-Z]{1,2}$/, 'A letter, like "A"')
+  .describe(
+    'Superset label: exercises with the same label in a session are done back to back ("A", "B")',
+  );
+
 /** Sets for one exercise, named the way the user says it ("bench", "DB row"). */
 export const ExerciseSetsInputSchema = z.object({
   exercise: NameSchema,
+  /** Marks the exercise as part of a superset; every set of it in the workout gets the label. */
+  superset: SupersetSchema.optional(),
   sets: z.array(SetInputSchema).min(1),
 });
 
@@ -75,6 +90,8 @@ export const WorkoutSetSchema = z.object({
   loadType: LoadTypeSchema,
   position: z.number().int(),
   setType: SetTypeSchema,
+  /** The superset this exercise was part of in the workout, if any. */
+  superset: z.string().nullable(),
   /** As logged: per dumbbell for per_hand, the added load for bodyweight_plus. */
   weightLb: z.number().nullable(),
   reps: z.number().int().nullable(),

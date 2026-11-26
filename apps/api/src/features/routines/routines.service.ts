@@ -26,6 +26,7 @@ interface VersionRow {
     targetReps: string | null;
     targetRpe: string | null;
     notes: string | null;
+    superset: string | null;
     exercise: { name: string } | null;
   }[];
 }
@@ -46,6 +47,7 @@ const toVersion = (row: VersionRow): RoutineVersion => ({
       targetReps: e.targetReps,
       targetRpe: toNumber(e.targetRpe),
       notes: e.notes,
+      superset: e.superset,
     })),
 });
 
@@ -59,6 +61,7 @@ const planSignature = (version: Pick<RoutineVersion, 'notes' | 'exercises'>) =>
       e.targetReps,
       e.targetRpe,
       e.notes ?? null,
+      e.superset ?? null,
     ]),
   });
 
@@ -149,6 +152,7 @@ export function createRoutinesService(db: Db, exercises: ExercisesService) {
             targetReps: entry.targetReps ?? null,
             targetRpe: entry.targetRpe ?? null,
             notes: entry.notes ?? null,
+            superset: entry.superset ?? null,
           });
         }
 
@@ -196,6 +200,7 @@ export function createRoutinesService(db: Db, exercises: ExercisesService) {
             targetReps: entry.targetReps,
             targetRpe: entry.targetRpe === null ? null : String(entry.targetRpe),
             notes: entry.notes,
+            superset: entry.superset,
           });
         }
 
