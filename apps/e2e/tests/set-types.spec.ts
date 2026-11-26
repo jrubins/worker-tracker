@@ -78,6 +78,7 @@ test('saves reference links on an exercise', async ({ page, api, capture }) => {
   await page.reload();
   await expect(page.getByRole('link', { name: /RDL form/ })).toBeVisible();
   await page.getByRole('button', { name: 'Remove RDL form' }).click();
+  await page.getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(page.getByText('No references yet.')).toBeVisible();
 });
 

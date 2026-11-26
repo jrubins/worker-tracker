@@ -50,11 +50,17 @@ export const InvalidAddress: Story = {
   },
 };
 
-/** Removing a link saves the list without it. */
+/** Removing a link asks first, then saves the list without it. */
 export const RemoveLink: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Remove RDL form' }));
+    await expect(args.onChange).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole('button', { name: 'Keep it' }));
+    await expect(canvas.getByRole('link', { name: /RDL form/ })).toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Remove RDL form' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Remove' }));
     await expect(args.onChange).toHaveBeenCalledWith([
       { url: 'https://example.com/hip-hinge', label: null },
     ]);

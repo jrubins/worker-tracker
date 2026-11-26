@@ -55,7 +55,8 @@ interface SetEditorProps {
 
 /** One logged set: shown as text, with inline editing to fix mistakes. */
 export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorProps) {
-  const [editing, setEditing] = useState(false);
+  const [mode, setMode] = useState<'view' | 'edit' | 'confirm-delete'>('view');
+  const [deleting, setDeleting] = useState(false);
   const form = useForm({
     defaultValues: {
       weight: set.weightLb === null ? '' : String(set.weightLb),
@@ -73,12 +74,43 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
         rpe: value.rpe === '' ? null : Number(value.rpe),
         setType: value.setType,
       });
-      setEditing(false);
+      setMode('view');
     },
   });
   const muted = set.setType !== 'working';
 
-  if (!editing) {
+  if (mode === 'confirm-delete') {
+    return (
+      <div
+        role="group"
+        aria-label={`Delete ${label}?`}
+        className="border-destructive/40 bg-destructive/10 -mx-2 my-1 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border px-3 py-2"
+      >
+        <span className="text-sm">
+          Delete {label}{' '}
+          <span className="text-muted-foreground tabular-nums">({formatSet(set)})</span>?
+        </span>
+        <span className="ml-auto flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setMode('view')}>
+            Keep it
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            disabled={deleting}
+            onClick={() => {
+              setDeleting(true);
+              void onDelete().finally(() => setDeleting(false));
+            }}
+          >
+            Delete
+          </Button>
+        </span>
+      </div>
+    );
+  }
+
+  if (mode === 'view') {
     return (
       <div className={cn('flex items-center gap-3 py-2', set.setType === 'drop' && 'pl-4')}>
         <span
@@ -109,7 +141,7 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
             size="icon"
             className="text-muted-foreground hover:text-foreground size-8"
             aria-label={`Edit ${label}`}
-            onClick={() => setEditing(true)}
+            onClick={() => setMode('edit')}
           >
             <Pencil />
           </Button>
@@ -118,7 +150,7 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
             size="icon"
             className="text-muted-foreground hover:text-destructive size-8"
             aria-label={`Delete ${label}`}
-            onClick={() => void onDelete()}
+            onClick={() => setMode('confirm-delete')}
           >
             <Trash2 />
           </Button>
@@ -209,7 +241,7 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
           size="sm"
           variant="outline"
           className="flex-1 sm:flex-none"
-          onClick={() => setEditing(false)}
+          onClick={() => setMode('view')}
         >
           Cancel
         </Button>
