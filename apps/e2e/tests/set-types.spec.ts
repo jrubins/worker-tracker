@@ -111,4 +111,23 @@ test.describe('on a phone', () => {
     await expect(page.getByRole('region', { name }).getByText('1 working set')).toBeVisible();
     await capture('workout-long-names-mobile');
   });
+
+  test('uses the full width to edit a set', async ({ page, api, capture }) => {
+    const logged = (await logWorkout(api, {
+      exercises: [{ exercise: 'Bench Press', sets: [{ weightLb: 185, reps: 5 }] }],
+    })) as { workout: { id: number } };
+    await page.goto(`/workouts/${logged.workout.id}`);
+    await page.getByRole('button', { name: 'Edit set 1' }).click();
+
+    const form = page.getByRole('form', { name: 'Edit set 1' });
+    const formWidth = (await form.boundingBox())?.width ?? 0;
+    const weightWidth = (await form.getByLabel('Weight (lb)').boundingBox())?.width ?? 0;
+    // Two fields per row on a phone, each about half the form.
+    expect(weightWidth).toBeGreaterThan(formWidth * 0.4);
+    await capture('set-editor-mobile');
+
+    await form.getByLabel('Reps').fill('6');
+    await form.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByText('185 lb × 6')).toBeVisible();
+  });
 });

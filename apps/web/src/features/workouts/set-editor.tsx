@@ -133,7 +133,7 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
         const error = f.state.meta.errors[0]?.message;
         const id = `set-${set.id}-${name}`;
         return (
-          <div className="w-32 space-y-1">
+          <div className="min-w-0 space-y-1">
             <Label htmlFor={id}>{fieldLabel}</Label>
             <Input
               id={id}
@@ -156,7 +156,7 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
 
   return (
     <form
-      className="flex flex-wrap items-end gap-3 py-2"
+      className="grid grid-cols-2 items-end gap-3 py-3 sm:grid-cols-5"
       aria-label={`Edit ${label}`}
       noValidate
       onSubmit={(event) => {
@@ -164,6 +164,9 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
         void form.handleSubmit();
       }}
     >
+      <p className="text-muted-foreground col-span-full text-xs font-semibold tracking-wide uppercase">
+        Edit {label}
+      </p>
       {field('weight', weightLabel(set.loadType))}
       {field('reps', 'Reps')}
       {field('seconds', 'Time (seconds)')}
@@ -172,7 +175,7 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
         {(f) => {
           const id = `set-${set.id}-type`;
           return (
-            <div className="w-32 space-y-1">
+            <div className="col-span-2 min-w-0 space-y-1 sm:col-span-1">
               <Label htmlFor={id}>Set type</Label>
               <select
                 id={id}
@@ -193,15 +196,21 @@ export function SetEditor({ set, label, marker, onSave, onDelete }: SetEditorPro
           );
         }}
       </form.Field>
-      <div className="flex gap-2 pb-0.5">
+      <div className="col-span-full flex gap-2 sm:justify-end">
         <form.Subscribe selector={(state) => state.isSubmitting}>
           {(isSubmitting) => (
-            <Button type="submit" size="sm" disabled={isSubmitting}>
+            <Button type="submit" size="sm" className="flex-1 sm:flex-none" disabled={isSubmitting}>
               {isSubmitting ? 'Saving…' : 'Save'}
             </Button>
           )}
         </form.Subscribe>
-        <Button type="button" size="sm" variant="outline" onClick={() => setEditing(false)}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="flex-1 sm:flex-none"
+          onClick={() => setEditing(false)}
+        >
           Cancel
         </Button>
       </div>

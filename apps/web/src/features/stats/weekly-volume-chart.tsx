@@ -7,7 +7,7 @@ import { tooltip } from '@tanstack/charts/tooltip';
 import { ChartColumn } from 'lucide-react';
 import { useMemo } from 'react';
 import { EmptyState } from '@/components/empty-state';
-import { formatCompact, formatShortDate } from '@/lib/format';
+import { formatCompact, formatNumber, formatShortDate } from '@/lib/format';
 
 /** Working volume (lb) per week, oldest first; the current (last) week is highlighted. */
 export function WeeklyVolumeChart({ weeks }: { weeks: readonly WeekSummary[] }) {
@@ -16,6 +16,8 @@ export function WeeklyVolumeChart({ weeks }: { weeks: readonly WeekSummary[] }) 
       weeks.map((week, index) => ({
         week: formatShortDate(week.weekStart),
         volume: week.volumeLb,
+        sessions: week.sessions,
+        workingSets: week.workingSets,
         current: index === weeks.length - 1,
       })),
     [weeks],
@@ -48,7 +50,24 @@ export function WeeklyVolumeChart({ weeks }: { weeks: readonly WeekSummary[] }) 
           axis: { line: false, ticks: { line: false, count: 4, format: formatCompact } },
         },
       },
-      tooltip,
+      // A tap anywhere in a week's column shows that week.
+      focus: 'nearest-x',
+      maxFocusDistance: Number.POSITIVE_INFINITY,
+      tooltip: {
+        use: tooltip,
+        content: ([point]) => {
+          const row = point?.datum;
+          if (!row) return { rows: [] };
+          return {
+            title: `Week of ${row.week}`,
+            rows: [
+              { label: 'Volume', value: `${formatNumber(row.volume)} lb` },
+              { label: 'Sessions', value: String(row.sessions) },
+              { label: 'Working sets', value: String(row.workingSets) },
+            ],
+          };
+        },
+      },
     });
   }, [rows]);
 
