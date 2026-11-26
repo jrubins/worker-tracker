@@ -93,3 +93,22 @@ test('shows rep records for weighted bodyweight lifts', async ({ page, api }) =>
   );
   await expect(page.getByRole('cell', { name: 'BW + 25 lb' })).toBeVisible();
 });
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('shows long exercise names in full', async ({ page, api, capture }) => {
+    const name = 'Seated Dumbbell Shoulder Press (Neutral Grip)';
+    const logged = (await logWorkout(api, {
+      exercises: [{ exercise: name, sets: [{ weightLb: 40, reps: 8 }] }],
+    })) as { workout: { id: number } };
+
+    await page.goto(`/workouts/${logged.workout.id}`);
+    const heading = page.getByRole('heading', { level: 2, name });
+    await expect(heading).toBeVisible();
+    // Wrapped, not cut off with an ellipsis.
+    expect(await heading.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    await expect(page.getByRole('region', { name }).getByText('1 working set')).toBeVisible();
+    await capture('workout-long-names-mobile');
+  });
+});

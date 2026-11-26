@@ -30,7 +30,7 @@ export function RecentPrs({ prs }: { prs: readonly RecentPr[] }) {
             <Link
               to="/exercises/$exerciseId"
               params={{ exerciseId: String(pr.exerciseId) }}
-              className="block truncate font-medium hover:underline"
+              className="block font-medium break-words hover:underline"
             >
               {pr.exerciseName}
             </Link>
