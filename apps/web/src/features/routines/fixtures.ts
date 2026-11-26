@@ -15,6 +15,7 @@ export const versionTwo: RoutineVersion = {
       targetReps: '5',
       targetRpe: 8,
       notes: null,
+      superset: null,
     },
     {
       exerciseId: 4,
@@ -24,6 +25,7 @@ export const versionTwo: RoutineVersion = {
       targetReps: '8-12',
       targetRpe: null,
       notes: 'Add weight past 12',
+      superset: null,
     },
   ],
 };
@@ -43,6 +45,7 @@ export const versionOne: RoutineVersion = {
       targetReps: '5',
       targetRpe: 8,
       notes: null,
+      superset: null,
     },
     {
       exerciseId: 5,
@@ -52,6 +55,7 @@ export const versionOne: RoutineVersion = {
       targetReps: '8-10',
       targetRpe: null,
       notes: null,
+      superset: null,
     },
   ],
 };

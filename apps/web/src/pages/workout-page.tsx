@@ -11,6 +11,7 @@ import {
   useDeleteSet,
   useDeleteWorkout,
   useUpdateSet,
+  useUpdateWorkout,
   workoutQueryOptions,
 } from '@/features/workouts/queries';
 import { formatDate, formatNumber } from '@/lib/format';
@@ -19,6 +20,7 @@ export function WorkoutPage() {
   const { workoutId } = useParams({ from: '/workouts/$workoutId' });
   const { data: workout } = useSuspenseQuery(workoutQueryOptions(Number(workoutId)));
   const updateSet = useUpdateSet();
+  const updateWorkout = useUpdateWorkout(workout.id);
   const deleteSet = useDeleteSet();
   const deleteWorkout = useDeleteWorkout();
   const navigate = useNavigate();
@@ -77,6 +79,9 @@ export function WorkoutPage() {
         sets={workout.sets}
         onSaveSet={(id, changes) => updateSet.mutateAsync({ id, changes })}
         onDeleteSet={(id) => deleteSet.mutateAsync(id)}
+        onSetSuperset={(exerciseId, superset) =>
+          updateWorkout.mutateAsync({ supersets: [{ exerciseId, superset }] })
+        }
       />
 
       <div className="border-t pt-6">

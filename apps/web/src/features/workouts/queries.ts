@@ -1,4 +1,10 @@
-import { WorkoutSchema, WorkoutSetSchema, WorkoutSummarySchema, type UpdateSet } from '@app/shared';
+import {
+  WorkoutSchema,
+  WorkoutSetSchema,
+  WorkoutSummarySchema,
+  type UpdateSet,
+  type UpdateWorkout,
+} from '@app/shared';
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api';
 
@@ -35,6 +41,18 @@ export function useUpdateSet() {
   return useMutation({
     mutationFn: ({ id, changes }: { id: number; changes: UpdateSet }) =>
       apiRequest(`/sets/${id}`, WorkoutSetSchema, {
+        method: 'PATCH',
+        body: JSON.stringify(changes),
+      }),
+    onSuccess: () => invalidate(),
+  });
+}
+
+export function useUpdateWorkout(id: number) {
+  const invalidate = useInvalidateTraining();
+  return useMutation({
+    mutationFn: (changes: UpdateWorkout) =>
+      apiRequest(`/workouts/${id}`, WorkoutSchema, {
         method: 'PATCH',
         body: JSON.stringify(changes),
       }),
